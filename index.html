@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Intake — State &amp; Firm Lookup</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#e8e8e4;color:#1a1a1a;}
+
+/* ── Header ── */
+.header{background:#f0f0ec;border-bottom:1px solid #d4d4ce;padding:11px 24px;display:flex;align-items:center;justify-content:space-between;height:46px;}
+.header-logo{font-size:15px;font-weight:600;color:#1a1a1a;letter-spacing:0.01em;}
+.header-logo span{color:#3a8a5a;margin-right:5px;}
+.header-right{display:flex;align-items:center;gap:12px;}
+.counter{font-size:13px;color:#888;letter-spacing:0.02em;}
+.export-btn{font-size:13px;padding:4px 11px;border-radius:5px;background:#daeeff;color:#2a6098;border:1px solid #a8c8e8;cursor:pointer;font-weight:600;display:none;transition:background 0.15s;}
+.export-btn:hover{background:#c8e4ff;}
+.export-btn.visible{display:inline-block;}
+
+/* ── Split panel layout ── */
+.app{display:flex;height:calc(100vh - 46px);overflow:hidden;}
+.panel-left{width:280px;min-width:180px;max-width:480px;background:#f0f0ec;border-right:1px solid #d4d4ce;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;}
+.resizer{width:5px;background:transparent;cursor:col-resize;flex-shrink:0;position:relative;z-index:10;}
+.resizer:hover,.resizer.dragging{background:#c8c8c2;}
+.panel-right{flex:1;overflow-y:auto;background:#e8e8e4;min-width:0;}
+.panel-right-inner{padding:28px 32px;max-width:860px;}
+
+/* ── Left panel sections ── */
+.left-top{padding:12px 12px 0;flex-shrink:0;}
+.left-list{flex:1;overflow-y:auto;padding:0 12px 12px;}
+.left-list::-webkit-scrollbar{width:3px;}
+.left-list::-webkit-scrollbar-track{background:transparent;}
+.left-list::-webkit-scrollbar-thumb{background:#c8c8c0;border-radius:3px;}
+
+/* ── Admin bar ── */
+.abar{border-radius:6px;padding:7px 10px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:5px;font-size:13px;}
+.abar.locked{background:#e8e8e2;border:1px solid #d0d0c8;}
+.abar.unlocked{background:#ddf5ea;border:1px solid #90cfaa;}
+.abar .lbl{font-weight:500;color:#888;}
+.abar.unlocked .lbl{color:#3a8a5a;}
+
+/* ── Search ── */
+.search-wrap{margin-bottom:10px;position:relative;}
+.search-wrap input{width:100%;font-size:14px;padding:8px 11px 8px 30px;border:1px solid #d0d0c8;border-radius:6px;background:#ebebе6;color:#1a1a1a;outline:none;transition:border 0.15s;}
+.search-wrap input{background:#e8e8e2;}
+.search-wrap input:focus{border-color:#3a8a5a;background:#f4f4f0;box-shadow:0 0 0 2px rgba(58,138,90,0.1);}
+.search-wrap input::placeholder{color:#aaa;}
+.search-icon{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:#aaa;font-size:14px;pointer-events:none;}
+
+/* ── State list ── */
+.hint{font-size:12px;color:#aaa;margin-bottom:8px;letter-spacing:0.02em;}
+.state-row{display:flex;align-items:center;justify-content:space-between;padding:9px 11px;background:#f0f0ec;border:1px solid #d8d8d2;border-radius:6px;margin-bottom:3px;cursor:pointer;transition:all 0.1s;}
+.state-row:hover{background:#e8e8e2;border-color:#c8c8c0;}
+.state-row.active-state{background:#daeeff;border-color:#98c0e8;box-shadow:0 0 0 1px #98c0e8;}
+.sr-left{display:flex;align-items:center;gap:9px;}
+.sr-abbr{font-size:12px;font-weight:700;color:#aaa;min-width:24px;letter-spacing:0.04em;}
+.sr-name{font-size:14px;color:#2a2a2a;font-weight:400;}
+.sr-right{display:flex;align-items:center;gap:5px;}
+.sr-firms{font-size:12px;color:#aaa;}
+.sr-arrow{color:#bbb;font-size:13px;}
+
+/* ── Right panel — state detail ── */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:calc(100vh - 100px);color:#bbb;text-align:center;padding:40px;}
+.empty-icon{font-size:32px;margin-bottom:14px;opacity:0.3;}
+.empty-title{font-size:16px;color:#aaa;font-weight:500;margin-bottom:5px;}
+.empty-sub{font-size:14px;color:#bbb;}
+.state-map-wrap{width:100%;max-width:360px;margin:0 auto 20px;border-radius:10px;overflow:hidden;border:1px solid #d4d4ce;background:#deded8;}
+.state-map-wrap iframe{display:block;width:100%;height:200px;border:none;}
+.state-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
+.sname{font-size:24px;font-weight:600;color:#1a1a1a;}
+.snotes{font-size:15px;color:#666;background:#f0f0ec;border:1px solid #d4d4ce;border-radius:8px;padding:11px 14px;margin-bottom:20px;line-height:1.65;border-left:3px solid #c0c0b8;}
+.sec-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:#aaa;margin:18px 0 9px;display:flex;align-items:center;gap:8px;}
+.sec-title::after{content:'';flex:1;height:1px;background:#d8d8d2;}
+.right-admin-bar{display:flex;align-items:center;gap:8px;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid #d8d8d2;}
+
+/* ── Firm cards ── */
+.firm-card{background:#f0f0ec;border:1px solid #d8d8d2;border-radius:9px;padding:14px 16px;margin-bottom:8px;transition:border-color 0.12s;}
+.firm-card:hover{border-color:#b8b8b0;}
+.firm-card.closed{opacity:0.45;}
+.firm-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+.firm-name{font-size:16px;font-weight:600;color:#1a1a1a;line-height:1.3;}
+.badges{display:flex;gap:4px;flex-wrap:wrap;align-items:center;}
+.badge{font-size:12px;font-weight:600;padding:2px 8px;border-radius:4px;white-space:nowrap;letter-spacing:0.02em;}
+.b-green{background:#d8f0e2;color:#1a6838;border:1px solid #98d8b0;}
+.b-red{background:#f8e0e0;color:#a02828;border:1px solid #e0a0a0;}
+.b-blue{background:#d8eaf8;color:#1a4878;border:1px solid #98c0e8;}
+.b-amber{background:#f8ecd8;color:#7a4808;border:1px solid #d8b880;}
+.b-gray{background:#e8e8e2;color:#666;border:1px solid #c8c8c0;}
+.req-grid{display:flex;flex-direction:column;gap:0;margin-bottom:9px;border:1px solid #d8d8d2;border-radius:6px;overflow:hidden;}
+.req{display:flex;align-items:baseline;gap:10px;padding:7px 13px;border-bottom:1px solid #e0e0da;background:#f0f0ec;}
+.req:last-child{border-bottom:none;}
+.req:nth-child(even){background:#e8e8e4;}
+.req-lbl{font-size:12px;font-weight:600;color:#999;min-width:160px;flex-shrink:0;letter-spacing:0.02em;}
+.req-val{font-size:14px;color:#333;line-height:1.5;}
+.rep-note{background:#faf5e0;border:1px solid #dcc870;border-radius:6px;padding:9px 12px;font-size:14px;color:#6a4a08;line-height:1.65;border-left:3px solid #b89010;}
+.rep-note strong{font-weight:700;color:#7a5810;}
+
+/* ── Buttons ── */
+.btn{font-size:13px;padding:5px 11px;border-radius:6px;border:1px solid #c8c8c0;background:#e8e8e2;color:#555;cursor:pointer;transition:all 0.12s;font-weight:500;}
+.btn:hover{background:#d8d8d0;color:#222;}
+.btn-green{background:#d8f0e2;color:#1a6838;border-color:#98d8b0;}
+.btn-green:hover{background:#c4e8d4;}
+.btn-red{background:#f8e0e0;color:#a02828;border-color:#e0a0a0;}
+.btn-red:hover{background:#f0d0d0;}
+.btn-blue{background:#d8eaf8;color:#1a4878;border-color:#98c0e8;}
+.btn-blue:hover{background:#c4dff4;}
+.btn-sm{font-size:12px;padding:3px 8px;}
+.no-result{font-size:14px;color:#aaa;padding:20px 0;text-align:center;}
+
+/* ── Modal ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px;}
+.modal{background:#f0f0ec;border-radius:12px;border:1px solid #c8c8c0;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;padding:24px;box-shadow:0 8px 32px rgba(0,0,0,0.15);}
+.modal h2{font-size:18px;font-weight:600;margin-bottom:20px;color:#1a1a1a;}
+.field{margin-bottom:12px;}
+.field label{display:block;font-size:12px;font-weight:700;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.06em;}
+.field input,.field textarea,.field select{width:100%;font-size:14px;padding:8px 11px;border:1px solid #c8c8c0;border-radius:6px;background:#e8e8e2;color:#1a1a1a;outline:none;}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:#3a8a5a;box-shadow:0 0 0 2px rgba(58,138,90,0.1);background:#f0f0ec;}
+.field textarea{resize:vertical;min-height:70px;line-height:1.5;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;padding-top:14px;border-top:1px solid #d4d4ce;}
+.err{font-size:13px;color:#a02828;margin-top:5px;text-align:center;}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-logo"><span>◆</span>ClientBridge — State & Firm Lookup</div>
+  <div class="header-right">
+    <span class="counter" id="counterDisplay">38 states · 47 firms</span>
+    <button class="export-btn" id="exportBtn" onclick="exportFile()">⬇ Export updated file</button>
+  </div>
+</div>
+<div class="app">
+  <div class="panel-left" id="panelLeft">
+    <div class="left-top">
+      <div class="abar locked" id="adminBar">
+        <span class="lbl" id="adminLabel">Rep mode</span>
+        <div id="adminBtns"><button class="btn btn-sm" onclick="openAdminPw()">Admin login</button></div>
+      </div>
+      <div class="search-wrap">
+        <span class="search-icon">⌕</span>
+        <input type="text" id="searchInput" placeholder="Search states…" oninput="handleSearch(this.value)" autocomplete="off">
+      </div>
+    </div>
+    <div class="left-list" id="stateList"></div>
+  </div>
+  <div class="resizer" id="resizer"></div>
+  <div class="panel-right" id="panelRight">
+    <div class="panel-right-inner" id="detailPanel"></div>
+  </div>
+</div>
+<div id="modalRoot"></div>
+
+<script>
+const TRT={noTrt:"Under 1 month with no treatment",withTrt:"31-90 days with treatment"};
+function LOWE(id,geo){return{id,name:"Lowe Law Firm",accepting:true,priority:"High",marketing:"Belief Marketing",minPD:"",minors:"No minors unless catastrophic",geographic:geo,requirements:"",exclusions:"No minors unless catastrophic",trtNoTrt:TRT.noTrt,trtWithTrt:TRT.withTrt,contact:"",notes:"No minors unless catastrophic."};}
+
+const DEFAULT_DATA={
+"Alabama":{abbr:"AL",notes:"Very tough — client is barred if even 1% at fault.",firms:[{id:"al1",name:"Turnbull",accepting:true,priority:"High",marketing:"Belief Marketing",minPD:"",minors:"16 Years Old",geographic:"AL, GA, TX",requirements:"",exclusions:"",trtNoTrt:TRT.noTrt,trtWithTrt:TRT.withTrt,contact:"",notes:"Also covers GA and TX."}]},
+"Alaska":{abbr:"AK",notes:"Both drivers can share blame regardless of fault.",firms:[LOWE("ak1","AK")]},
+"Arizona":{abbr:"AZ",notes:"Both drivers can share blame regardless of fault.",firms:[{id:"az1",name:"Theut Scaringelli & Kupiszewski (TSK)",accepting:true,priority:"High",marketing:"Belief Marketing",minPD:"",minors:"No minors unless catastrophic",geographic:"AZ",requirements:"",exclusions:"No minors unless catastrophic",trtNoTrt:TRT.noTrt,trtWithTrt:TRT.withTrt,contact:"",notes:"No minors unless catastrophic."}]},
+"Arkansas":{abbr:"AR",notes:"Both drivers can share blame regardless of fault.",firms:[LOWE("ar1","AR")]},
+"California":{abbr:"CA",notes:"Both drivers can share blame regardless of fault. CA cases tend to have high value.",firms:[{id:"ca1",name:"M&Y Personal Injury Lawyers",accepting:true,priority:"High",marketing:"Belief Marketing",minPD:"",minors:"No minors unless catastrophic",geographic:"CA",requirements:"",exclusions:"No minors unless catastrophic",trtNoTrt:TRT.noTrt,trtWithTrt:TRT.withTrt,contact:"",notes:"No minors unless catastrophic."},{id:"ca2",name:"Larry H. Parker (LHP)",accepting:true,priority:"High",marketing:"Belief Marketing",minPD:"",minors:"No minors unless catastrophic",geographic:"CA",requirements:"",exclusions:"No minors unless catastrophic",trtNoTrt:TRT.noTrt,trtWithTrt:TRT.withTrt,contact:"",notes:"No minors unless catastrophic."},LOWE("ca3","CA")]},
+"Colorado":{abbr:"CO",notes:"Client cannot be more than 50% at fault.",firms:[{id:"co1",name:"Levine Law",accepting:true,priority:"High",marketing:"Belief Marketing",minPD:"",minors:"No minors unless catastrophic",geographic:"CO",requirements:"",exclusions:"No minors unless catastrophic",trtNoTrt:TRT.noTrt,trtWithTrt:TRT.withTrt,contact:"",notes:"No minors unless catastrophic."},LOWE("co2","CO")]},
+
+"Georgia":{abbr:"GA",notes:"Client cannot be more than 50% at fault. High rate of uninsured drivers.",firms:[{id:"ga1",name:"Edward Law Group",accepting:true,priority:"High",marketing:"Belief Marketing",minPD:"$3,500",minors:"No minors unless catastrophic",geographic:"GA",requirements:"Minimum $3,500 for PD.",exclusions:"No minors unless catastrophic",trtNoTrt:TRT.noTrt,trtWithTrt:TRT.withTrt,contact:"",notes:"Min $3,500 for PD. No minors unless catastrophic."},{id:"ga2",name:"The Injury Law",accepting:true,priority:"High",marketing:"TrueCare Marketing",minPD:"Moderate to Totaled",minors:"16 Years Old",geographic:"Metro Atlanta (up to 2 hrs), Savannah, Brunswick",requirements:"Hospital or urgent care visit within 4 weeks. They handle PD for clients.",exclusions:"",trtNoTrt:TRT.noTrt,trtWithTrt:TRT.withTrt,contact:"",notes:"Metro Atlanta up to 2 hrs out. Savannah & Brunswick OK. Must treat within 4 weeks."},{id:"ga3",name:"Turnbull",accepting:true,priority:"Medium",marketing:"Belief Marketing",minPD:"",minors:"16 Years Old",geographic:"AL, GA, TX",requirements:"",exclusions:"",trtNoTrt:TRT.noTrt,trtWithTrt:TRT.withTrt,contact:"",notes:"Also covers AL and TX."}]},
+"Idaho":{abbr:"ID",notes:"Client cannot be more than 50% at fault.",firms:[LOWE("id1","ID")]},
+"Illinois":{abbr:"IL",notes:"Client cannot be more than 51% at fault.",firms:[{id:"il1",name:"Spartan Law Firm",accepting:true,priority:"High",marketing:"TrueCare Marketing",minPD:"",minors:"16 Years Old",geographic:"NC, GA, IL, OH, TN",requirements:"",exclusions:"",trtNoTrt:TRT.noTrt,trtWithTrt:TRT.withTrt,contact:"",notes:"Also covers NC, GA, OH, TN."},LOWE("il2","IL")]},
+"Iowa":{abbr:"IA",notes:"Both drivers can share blame regardless of fault.",firms:[LOWE("ia1","IA")]},
+"Kansas":{abbr:"KS",notes:"Both drivers can share blame regardless of fault.",firms:[LOWE("ks1","KS")]},
+"Kentucky":{abbr:"KY",notes:"Both drivers can share blame regardless of fault.",firms:[LOWE("ky1","KY")]},
+"Louisiana":{abbr:"LA",notes:"Both drivers can share blame regardless of fault.",firms:[{id:"la1",name:"Imbornone Law Firm",accepting:true,priority:"High",marketing:"Belief Marketing",minPD:"",minors:"No minors unless catastrophic",geographic:"LA",requirements:"",exclusions:"No minors unless catastrophic",trtNoTrt:TRT.noTrt,trtWithTrt:TRT.withTrt,contact:"",notes:"No minors unless catastrophic."}]},
+"Maryland":{abbr:"MD",notes:"Client cannot be more than 50% at fault.",firms:[]},
+"Michigan":{abbr:"MI",notes:"No-fault state — Michigan has strong PIP coverage requirements.",firms:[]},
+"Minnesota":{abbr:"MN",notes:"Both drivers can share blame regardless of fault.",firms:[LOWE("mn1","MN")]},
+"Mississippi":{abbr:"MS",notes:"Both drivers can share blame regardless of fault.",firms:[]},
+"Missouri":{abbr:"MO",notes:"Both drivers can share blame regardless of fault.",firms:[{id:"mo1",name:"Beck & Beck Missouri Car Accident Lawyers (B&B)",accepting:true,priority:"High",marketing:"Belief Marketing",minPD:"",minors:"No minors unless catastrophic",geographic:"MO",requirements:"Must submit intake link with ATC & Agreement.",exclusions:"No minors unless catastrophic",trtNoTrt:TRT.noTrt,trtWithTrt:TRT.withTrt,contact:"https://becklawmo.com/belief-leads/",notes:"Must submit link with intake, ATC & Agreement: becklawmo.com/belief-leads/"},LOWE("mo2","MO")]},
+"Montana":{abbr:"MT",notes:"Both drivers can share blame regardless of fault.",firms:[LOWE("mt1","MT")]},
+"Nebraska":{abbr:"NE",notes:"Client cannot be more than 50% at fault.",firms:[LOWE("ne1","NE")]},
+"Nevada":{abbr:"NV",notes:"Client cannot be more than 51% at fault.",firms:[{id:"nv1",name:"Richard Harris Law Firm",accepting:true,priority:"High",marketing:"Belief Marketing",minPD:"",minors:"No minors unless catastrophic",geographic:"NV",requirements:"",exclusions:"No minors unless catastrophic",trtNoTrt:TRT.noTrt,trtWithTrt:TRT.withTrt,contact:"",notes:"No minors unless catastrophic."},{id:"nv2",name:"Edward M. Bernstein & Associates (EMB)",accepting:true,priority:"High",marketing:"Belief Marketing",minPD:"",minors:"No minors unless catastrophic",geographic:"NV",requirements:"",exclusions:"No minors unless catastrophic",trtNoTrt:TRT.noTrt,trtWithTrt:TRT.withTrt,contact:"",notes:"No minors unless catastrophic."},LOWE("nv3","NV")]},
+"New Jersey":{abbr:"NJ",notes:"Client cannot be more than 51% at fault.",firms:[{id:"nj1",name:"Kwartler Manus",accepting:true,priority:"High",marketing:"Belief Marketing",minPD:"",minors:"No minors unless catastrophic",geographic:"NJ",requirements:"MUST have 2 people in the car.",exclusions:"No minors unless catastrophic",trtNoTrt:TRT.noTrt,trtWithTrt:TRT.withTrt,contact:"",notes:"MUST have 2 people in car. No minors unless catastrophic."}]},
+"New Mexico":{abbr:"NM",notes:"Both drivers can share blame regardless of fault.",firms:[{id:"nm1",name:"KRW Lawyers",accepting:true,priority:"High",marketing:"Belief Marketing",minPD:"",minors:"No minors unless catastrophic",geographic:"TX, NM",requirements:"",exclusions:"No minors unless catastrophic",trtNoTrt:TRT.noTrt,trtWithTrt:TRT.withTrt,contact:"",notes:"Also covers TX. No minors unless catastrophic."},LOWE("nm2","NM")]},
+"North Carolina":{abbr:"NC",notes:"Tough state — client is barred if even 1% at fault.",firms:[{id:"nc1",name:"Spartan Law Firm",accepting:true,priority:"High",marketing:"TrueCare Marketing",minPD:"",minors:"16 Years Old",geographic:"NC, GA, IL, OH, TN",requirements:"",exclusions:"",trtNoTrt:TRT.noTrt,trtWithTrt:TRT.withTrt,contact:"",notes:"Also covers GA, IL, OH, TN."}]},
+"North Dakota":{abbr:"ND",notes:"Both drivers can share blame regardless of fault.",firms:[LOWE("nd1","ND")]},
+"Ohio":{abbr:"OH",notes:"Client cannot be more than 51% at fault.",firms:[{id:"oh1",name:"Spartan Law Firm",accepting:true,priority:"High",marketing:"TrueCare Marketing",minPD:"",minors:"16 Years Old",geographic:"NC, GA, IL, OH, TN",requirements:"",exclusions:"",trtNoTrt:TRT.noTrt,trtWithTrt:TRT.withTrt,contact:"",notes:"Also covers NC, GA, IL, TN."},LOWE("oh2","OH")]},
+"Oklahoma":{abbr:"OK",notes:"Both drivers can share blame regardless of fault.",firms:[LOWE("ok1","OK")]},
+"Oregon":{abbr:"OR",notes:"Both drivers can share blame regardless of fault.",firms:[LOWE("or1","OR")]},
+"Pennsylvania":{abbr:"PA",notes:"Client cannot be more than 51% at fault.",firms:[{id:"pa1",name:"Kwartler Manus",accepting:true,priority:"High",marketing:"Belief Marketing",minPD:"",minors:"No minors unless catastrophic",geographic:"Philadelphia + Delaware, Montgomery, Chester, Bucks counties; Pittsburgh metro",requirements:"Philly area or Pittsburgh metro ONLY. MUST have 2 people in the car.",exclusions:"No minors unless catastrophic",trtNoTrt:TRT.noTrt,trtWithTrt:TRT.withTrt,contact:"",notes:"Philly/Pittsburgh ONLY. MUST have 2 people in car. No minors unless catastrophic."}]},
+"South Carolina":{abbr:"SC",notes:"Client cannot be more than 51% at fault.",firms:[{id:"sc1",name:"Woron and Dhillon Firm (W&D)",accepting:true,priority:"High",marketing:"Belief Marketing",minPD:"$2,000",minors:"No minors unless catastrophic",geographic:"SC — Allendale, Orangeburg, Hampton, Jasper, Williamsburg preferred",requirements:"$2K min PD. Liberal venue counties: Allendale, Orangeburg, Hampton, Jasper, Williamsburg.",exclusions:"No minors unless catastrophic",trtNoTrt:TRT.noTrt,trtWithTrt:TRT.withTrt,contact:"",notes:"$2K min PD. Liberal venues preferred. No minors unless catastrophic."}]},
+"South Dakota":{abbr:"SD",notes:"Both drivers can share blame regardless of fault.",firms:[LOWE("sd1","SD")]},
+"Tennessee":{abbr:"TN",notes:"Client cannot be more than 50% at fault.",firms:[{id:"tn1",name:"Spartan Law Firm",accepting:true,priority:"High",marketing:"TrueCare Marketing",minPD:"",minors:"16 Years Old",geographic:"NC, GA, IL, OH, TN",requirements:"",exclusions:"",trtNoTrt:TRT.noTrt,trtWithTrt:TRT.withTrt,contact:"",notes:"Also covers NC, GA, IL, OH."}]},
+"Texas":{abbr:"TX",notes:"Client cannot be more than 51% at fault. TX tends to have high case values.",firms:[{id:"tx1",name:"Edward Law Group",accepting:true,priority:"High",marketing:"Belief Marketing",minPD:"$3,500",minors:"No minors unless catastrophic",geographic:"TX",requirements:"Min $3,500 for PD.",exclusions:"No minors unless catastrophic",trtNoTrt:TRT.noTrt,trtWithTrt:TRT.withTrt,contact:"",notes:"Min $3,500 for PD."},{id:"tx2",name:"KRW Lawyers",accepting:true,priority:"High",marketing:"Belief Marketing",minPD:"",minors:"No minors unless catastrophic",geographic:"TX, NM",requirements:"",exclusions:"No minors unless catastrophic",trtNoTrt:TRT.noTrt,trtWithTrt:TRT.withTrt,contact:"",notes:"Also covers NM."},{id:"tx3",name:"Anderson Law",accepting:true,priority:"High",marketing:"Belief Marketing",minPD:"Over $1,000",minors:"16 Years Old",geographic:"Dallas/FTW (50mi), Austin (30mi)",requirements:"PD over $1,000. Dallas/FTW 50mi or Austin 30mi only.",exclusions:"",trtNoTrt:TRT.noTrt,trtWithTrt:TRT.withTrt,contact:"",notes:"DFW (50mi) and Austin (30mi) ONLY."},{id:"tx4",name:"Turnbull",accepting:true,priority:"Medium",marketing:"Belief Marketing",minPD:"",minors:"16 Years Old",geographic:"AL, GA, TX",requirements:"",exclusions:"",trtNoTrt:TRT.noTrt,trtWithTrt:TRT.withTrt,contact:"",notes:"Also covers AL and GA."},LOWE("tx5","TX")]},
+"Utah":{abbr:"UT",notes:"Client cannot be more than 50% at fault.",firms:[LOWE("ut1","UT")]},
+"Virginia":{abbr:"VA",notes:"Client cannot be more than 50% at fault.",firms:[]},
+"Washington":{abbr:"WA",notes:"Both drivers can share blame regardless of fault.",firms:[{id:"wa1",name:"Bernard Law",accepting:true,priority:"High",marketing:"Belief Marketing",minPD:"",minors:"No minors unless catastrophic",geographic:"WA",requirements:"Anyone under 12 does NOT need a signed agreement — attorney handles directly with guardian.",exclusions:"No minors unless catastrophic",trtNoTrt:TRT.noTrt,trtWithTrt:TRT.withTrt,contact:"",notes:"Under 12: no signed agreement needed. No minors unless catastrophic."},{id:"wa2",name:"Herschensohn Law Firm (ZBH)",accepting:true,priority:"High",marketing:"Belief Marketing",minPD:"",minors:"No minors unless catastrophic",geographic:"WA",requirements:"Last 4 of SSN required on agreement. Full SSN required to proceed.",exclusions:"No minors unless catastrophic",trtNoTrt:TRT.noTrt,trtWithTrt:TRT.withTrt,contact:"",notes:"Last 4 SSN on agreement. Full SSN required to proceed. No minors unless catastrophic."},LOWE("wa3","WA")]},
+"Wisconsin":{abbr:"WI",notes:"Both drivers can share blame regardless of fault.",firms:[LOWE("wi1","WI")]},
+"Wyoming":{abbr:"WY",notes:"Both drivers can share blame regardless of fault.",firms:[LOWE("wy1","WY")]}
+};
+
+const ABBR_MAP={AK:"Alaska",AL:"Alabama",AR:"Arkansas",AZ:"Arizona",CA:"California",CO:"Colorado",GA:"Georgia",IA:"Iowa",ID:"Idaho",IL:"Illinois",KS:"Kansas",KY:"Kentucky",LA:"Louisiana",MD:"Maryland",MI:"Michigan",MN:"Minnesota",MO:"Missouri",MS:"Mississippi",MT:"Montana",NC:"North Carolina",ND:"North Dakota",NE:"Nebraska",NJ:"New Jersey",NM:"New Mexico",NV:"Nevada",OH:"Ohio",OK:"Oklahoma",OR:"Oregon",PA:"Pennsylvania",SC:"South Carolina",SD:"South Dakota",TN:"Tennessee",TX:"Texas",UT:"Utah",VA:"Virginia",WA:"Washington",WI:"Wisconsin",WY:"Wyoming"};
+
+const STORAGE_KEY="pi_intake_v5";
+let appData=JSON.parse(JSON.stringify(DEFAULT_DATA)),adminUnlocked=false,search="",curState=null,editDraft=null,stateDraft=null,modalMode=null,searchMode="state";
+
+function loadData(){return JSON.parse(JSON.stringify(DEFAULT_DATA));}
+function saveData(){/* data lives in memory — use Export to persist changes */
+  const p=document.getElementById("exportBtn");if(p)p.classList.add("visible");}
+function uid(){return"f"+Date.now()+Math.random().toString(36).slice(2,5);}
+function updateCounter(){const el=document.getElementById("counterDisplay");if(el){const nS=Object.keys(appData).length,nF=Object.values(appData).reduce((a,s)=>a+s.firms.length,0);el.textContent=nS+" states · "+nF+" firms";}}
+
+function exportFile(){
+  // Serialize current appData back into the HTML file as the new DEFAULT_DATA
+  const dataStr=JSON.stringify(appData,null,0);
+  // Build the export by replacing DEFAULT_DATA in the source
+  const src=document.documentElement.outerHTML;
+  // Find and replace the DEFAULT_DATA block
+  const start=src.indexOf("const DEFAULT_DATA={");
+  const end=src.indexOf("\n};\n\nconst ABBR_MAP")+3;
+  if(start===-1||end<start){alert("Export failed — could not locate data block.");return;}
+  const newSrc=src.slice(0,start)+"const DEFAULT_DATA="+dataStr+";"+src.slice(end);
+  const blob=new Blob([newSrc],{type:"text/html"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="law-firm-lookup.html";
+  a.click();
+  URL.revokeObjectURL(a.href);
+  document.getElementById("exportBtn").classList.remove("visible");
+}
+function pb(p){if(p==="High")return'<span class="badge b-green">High priority</span>';if(p==="Medium")return'<span class="badge b-blue">Medium priority</span>';return'<span class="badge b-gray">'+p+"</span>";}
+function ab(a){return a?'<span class="badge b-green">Accepting</span>':'<span class="badge b-red">Closed</span>';}
+function mb(m){if(!m)return"";if(m.toLowerCase().includes("catastrophic"))return'<span class="badge b-red">No minors</span>';if(m.includes("16"))return'<span class="badge b-amber">16+ only</span>';return"";}
+
+function firmCard(f,sk){
+  const adminBtns=adminUnlocked?`<div style="display:flex;gap:5px;margin-left:auto;"><button class="btn btn-sm btn-blue" onclick="openEditFirm('${sk}','${f.id}')">Edit</button><button class="btn btn-sm btn-red" onclick="deleteFirm('${sk}','${f.id}')">Remove</button></div>`:"";
+  const rows=[[f.minPD,"Min. property damage"],[f.trtNoTrt,"No treatment window"],[f.trtWithTrt,"With treatment window"],[f.geographic,"Geographic coverage"],[f.requirements,"Requirements"],[f.exclusions,"Exclusions"],[f.marketing,"Marketing source"],[f.contact,"Contact / link"]].filter(r=>r[0]);
+  return`<div class="firm-card${f.accepting?"":" closed"}"><div class="firm-top"><div class="firm-name">${f.name}</div><div class="badges">${pb(f.priority)}${ab(f.accepting)}${mb(f.minors)}${adminBtns}</div></div><div class="req-grid">${rows.map(([v,l])=>`<div class="req"><div class="req-lbl">${l}</div><div class="req-val">${v}</div></div>`).join("")}</div>${f.notes?`<div class="rep-note"><strong>Rep note:</strong> ${f.notes}</div>`:""}</div>`;
+}
+
+function stateMapEmbed(stateName){
+  const q=encodeURIComponent(stateName+", USA");
+  return`<div class="state-map-wrap"><iframe src="https://maps.google.com/maps?q=${q}&z=5&output=embed" loading="lazy" title="${stateName} map"></iframe></div>`;
+}
+
+function renderList(){
+  const sorted=Object.keys(appData).sort();
+  const q=search.toLowerCase();
+  const filtered=q?sorted.filter(s=>s.toLowerCase().includes(q)||appData[s].abbr.toLowerCase()===q):sorted;
+  if(!filtered.length)return`<div class="no-result">No states match</div>`;
+  const rows=filtered.map(s=>{
+    const fc=appData[s].firms.filter(f=>f.accepting).length;
+    const activeClass=curState===s?" active-state":"";
+    return`<div class="state-row${activeClass}" onclick="viewState('${s}')"><div class="sr-left"><span class="sr-abbr">${appData[s].abbr}</span><span class="sr-name">${s}</span></div><div class="sr-right"><span class="sr-firms">${fc}f</span><span class="sr-arrow">›</span></div></div>`;
+  }).join("");
+  const addBtn=adminUnlocked?`<div style="margin-top:10px;"><button class="btn btn-blue btn-sm" onclick="openAddState()">+ Add state</button></div>`:"";
+  return`<p class="hint">${filtered.length} states</p>${rows}${addBtn}`;
+}
+
+function renderDetail(key){
+  if(!key)return`<div class="empty-state"><div class="empty-icon">◈</div><div class="empty-title">Select a state</div><div class="empty-sub">Click any state on the left to view firms and requirements</div></div>`;
+  const s=appData[key],active=s.firms.filter(f=>f.accepting),closed=s.firms.filter(f=>!f.accepting);
+  const adminBtns=adminUnlocked?`<div class="right-admin-bar"><button class="btn btn-sm" onclick="openEditState('${key}')">Edit state</button><button class="btn btn-sm btn-blue" onclick="openAddFirm('${key}')">+ Add firm</button></div>`:"";
+  const notesHtml=adminUnlocked
+    ?`<textarea id="inlineNotes" style="width:100%;font-size:13px;color:#333;background:#fff;border:1px solid #3a8a5a;border-radius:8px;padding:10px 14px;line-height:1.6;resize:vertical;min-height:60px;outline:none;font-family:inherit;margin-bottom:6px;">${s.notes}</textarea><div style="display:flex;gap:6px;justify-content:flex-end;margin-bottom:16px;"><span style="font-size:11px;color:#bbb;align-self:center;">Editing state notes</span><button class="btn btn-sm btn-green" onclick="saveInlineNotes('${key}')">Save notes</button></div>`
+    :`<div class="snotes">${s.notes}</div>`;
+  return`<div class="state-header"><span class="sname">${key} (${s.abbr})</span></div>${stateMapEmbed(key)}${notesHtml}${adminBtns}${active.length?`<div class="sec-title">Accepting leads</div>`+active.map(f=>firmCard(f,key)).join(""):""} ${closed.length?`<div class="sec-title">Not currently accepting</div>`+closed.map(f=>firmCard(f,key)).join(""):""} ${!active.length&&!closed.length?`<div class="no-result" style="margin-top:24px;">No firms assigned yet.</div>`:""}`;
+}
+
+function buildModal(){
+  if(!modalMode)return"";
+  if(modalMode==="pw")return`<div class="overlay" id="ov" onclick="if(event.target.id==='ov')closeModal()"><div class="modal"><h2>Admin login</h2><div class="field"><label>Password</label><input type="password" id="pwf" placeholder="Enter password" onkeydown="if(event.key==='Enter')submitPw()"/></div><div class="err" id="pwerr"></div><div class="modal-footer"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-green" onclick="submitPw()">Unlock</button></div></div></div>`;
+  if(modalMode==="firm"&&editDraft){
+    const d=editDraft;
+    const fields=[["name","Firm name","text"],["minPD","Min. property damage","text"],["trtNoTrt","No treatment window","text"],["trtWithTrt","With treatment window","text"],["geographic","Geographic coverage","text"],["requirements","Requirements","textarea"],["exclusions","Exclusions","text"],["marketing","Marketing source","text"],["contact","Contact / link","text"],["notes","Rep note","textarea"]];
+    return`<div class="overlay" id="ov" onclick="if(event.target.id==='ov')closeModal()"><div class="modal"><h2>${d._new?"Add firm":"Edit firm"}</h2><div class="two-col"><div class="field"><label>Status</label><select id="ef_a"><option value="true" ${d.accepting!==false?"selected":""}>Accepting</option><option value="false" ${d.accepting===false?"selected":""}>Not accepting</option></select></div><div class="field"><label>Priority</label><select id="ef_p">${["High","Medium","Paused"].map(p=>`<option ${d.priority===p?"selected":""}>${p}</option>`).join("")}</select></div></div><div class="field"><label>Minor policy</label><select id="ef_m"><option value="No minors unless catastrophic" ${(d.minors||"")==="No minors unless catastrophic"?"selected":""}>No minors unless catastrophic</option><option value="16 Years Old" ${(d.minors||"")==="16 Years Old"?"selected":""}>16 Years Old</option><option value="" ${!d.minors?"selected":""}>No restriction</option></select></div>${fields.map(([k,l,t])=>`<div class="field"><label>${l}</label>${t==="textarea"?`<textarea id="ef_${k}">${d[k]||""}</textarea>`:`<input type="text" id="ef_${k}" value="${(d[k]||"").replace(/"/g,"&quot;")}"/>`}</div>`).join("")}<div class="modal-footer"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-green" onclick="saveFirmEdit()">Save</button></div></div></div>`;
+  }
+  if(modalMode==="state"&&stateDraft)return`<div class="overlay" id="ov" onclick="if(event.target.id==='ov')closeModal()"><div class="modal"><h2>Edit state</h2><div class="two-col"><div class="field"><label>State name</label><input type="text" id="es_n" value="${stateDraft.key}"/></div><div class="field"><label>Abbreviation</label><input type="text" id="es_a" value="${stateDraft.abbr}"/></div></div><div class="field"><label>State notes</label><textarea id="es_no">${stateDraft.notes}</textarea></div><div class="modal-footer"><button class="btn btn-red" onclick="deleteState('${stateDraft.key}')">Delete state</button><button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-green" onclick="saveStateEdit('${stateDraft.key}')">Save</button></div></div></div>`;
+  if(modalMode==="addstate")return`<div class="overlay" id="ov" onclick="if(event.target.id==='ov')closeModal()"><div class="modal"><h2>Add new state</h2><div class="two-col"><div class="field"><label>State name</label><input type="text" id="as_n" placeholder="e.g. Michigan"/></div><div class="field"><label>Abbreviation</label><input type="text" id="as_a" placeholder="e.g. MI"/></div></div><div class="field"><label>State notes</label><textarea id="as_no" placeholder="Fault rules, market notes..."></textarea></div><div class="modal-footer"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-green" onclick="addState()">Add state</button></div></div></div>`;
+  return"";
+}
+
+function fullRender(){
+  const listEl=document.getElementById("stateList");
+  const detailEl=document.getElementById("detailPanel");
+  if(listEl)listEl.innerHTML=renderList();
+  if(detailEl)detailEl.innerHTML=renderDetail(curState);
+  document.getElementById("modalRoot").innerHTML=buildModal();
+  updateCounter();
+  if(modalMode==="pw")setTimeout(()=>{const f=document.getElementById("pwf");if(f)f.focus();},30);
+}
+
+function handleSearch(v){search=v;fullRender();}
+function viewState(s){curState=s;fullRender();}
+function openAdminPw(){modalMode="pw";fullRender();}
+function closeModal(){modalMode=null;editDraft=null;stateDraft=null;fullRender();}
+function submitPw(){const p=document.getElementById("pwf").value;if(p==="intake2024"){adminUnlocked=true;modalMode=null;document.getElementById("adminBar").className="abar unlocked";document.getElementById("adminLabel").textContent="Admin mode";document.getElementById("adminBtns").innerHTML=`<button class="btn btn-sm btn-red" onclick="lockAdmin()">Lock</button>`;document.getElementById("exportBtn").classList.add("visible");fullRender();}else{document.getElementById("pwerr").textContent="Incorrect password.";}}
+function lockAdmin(){adminUnlocked=false;document.getElementById("adminBar").className="abar locked";document.getElementById("adminLabel").textContent="Rep mode";document.getElementById("adminBtns").innerHTML=`<button class="btn btn-sm" onclick="openAdminPw()">Admin login</button>`;document.getElementById("exportBtn").classList.remove("visible");fullRender();}
+function openEditFirm(sk,id){editDraft=Object.assign({_sk:sk},JSON.parse(JSON.stringify(appData[sk].firms.find(f=>f.id===id))));modalMode="firm";fullRender();}
+function saveFirmEdit(){const sk=editDraft._sk,firms=appData[sk].firms,idx=firms.findIndex(f=>f.id===editDraft.id);const u={id:editDraft.id,name:document.getElementById("ef_name").value,accepting:document.getElementById("ef_a").value==="true",priority:document.getElementById("ef_p").value,minors:document.getElementById("ef_m").value,marketing:document.getElementById("ef_marketing").value,minPD:document.getElementById("ef_minPD").value,trtNoTrt:document.getElementById("ef_trtNoTrt").value,trtWithTrt:document.getElementById("ef_trtWithTrt").value,geographic:document.getElementById("ef_geographic").value,requirements:document.getElementById("ef_requirements").value,exclusions:document.getElementById("ef_exclusions").value,contact:document.getElementById("ef_contact").value,notes:document.getElementById("ef_notes").value};if(idx>-1)firms[idx]=u;else firms.push(u);saveData();closeModal();}
+function deleteFirm(sk,id){if(!confirm("Remove this firm?"))return;appData[sk].firms=appData[sk].firms.filter(f=>f.id!==id);saveData();fullRender();}
+function openEditState(key){stateDraft={key,abbr:appData[key].abbr,notes:appData[key].notes};modalMode="state";fullRender();}
+function saveStateEdit(oldKey){const nk=(document.getElementById("es_n").value||oldKey).trim();if(nk!==oldKey){appData[nk]=appData[oldKey];delete appData[oldKey];}appData[nk].abbr=document.getElementById("es_a").value;appData[nk].notes=document.getElementById("es_no").value;if(curState===oldKey)curState=nk;saveData();closeModal();}
+function deleteState(key){if(!confirm("Delete "+key+"?"))return;delete appData[key];curState=null;saveData();closeModal();}
+function openAddState(){modalMode="addstate";fullRender();}
+function addState(){const k=(document.getElementById("as_n").value||"").trim();if(!k)return;appData[k]={abbr:document.getElementById("as_a").value||"",notes:document.getElementById("as_no").value||"",firms:[]};curState=k;saveData();closeModal();}
+function saveInlineNotes(key){const el=document.getElementById("inlineNotes");if(el){appData[key].notes=el.value;saveData();fullRender();}}
+function openAddFirm(sk){editDraft={id:uid(),_sk:sk,_new:true,name:"",accepting:true,priority:"High",minors:"No minors unless catastrophic",marketing:"Belief Marketing",minPD:"",trtNoTrt:TRT.noTrt,trtWithTrt:TRT.withTrt,geographic:"",requirements:"",exclusions:"",contact:"",notes:""};modalMode="firm";fullRender();}
+
+// ── Resizer drag logic ──
+(function(){
+  const resizer=document.getElementById("resizer");
+  const left=document.getElementById("panelLeft");
+  let dragging=false,startX=0,startW=0;
+  resizer.addEventListener("mousedown",e=>{
+    dragging=true;startX=e.clientX;startW=left.offsetWidth;
+    resizer.classList.add("dragging");
+    document.body.style.cursor="col-resize";
+    document.body.style.userSelect="none";
+  });
+  document.addEventListener("mousemove",e=>{
+    if(!dragging)return;
+    const w=Math.min(Math.max(startW+(e.clientX-startX),180),520);
+    left.style.width=w+"px";
+  });
+  document.addEventListener("mouseup",()=>{
+    if(!dragging)return;
+    dragging=false;resizer.classList.remove("dragging");
+    document.body.style.cursor="";document.body.style.userSelect="";
+  });
+})();
+
+fullRender();
+</script>
+
+
+</body></html>

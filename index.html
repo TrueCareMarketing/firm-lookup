@@ -356,7 +356,7 @@ async function submitFlag(){
     setTimeout(()=>{closeFlagModal();fullRender();},3000);
   }
 }
-function unflagFirm(sk,id){const f=appData[sk].firms.find(x=>x.id===id);if(!f)return;f.flagged=false;delete f.flagNote;delete f.flaggedDate;saveData();fullRender();}
+async function unflagFirm(sk,id){const f=appData[sk].firms.find(x=>x.id===id);if(!f)return;f.flagged=false;delete f.flagNote;delete f.flaggedDate;await saveData(null);fullRender();}
 function speakFirm(btn,text){
   window.speechSynthesis.cancel();
   const utt=new SpeechSynthesisUtterance(text);utt.rate=0.92;utt.pitch=1;
@@ -468,15 +468,24 @@ function submitPw(){const p=document.getElementById("pwf").value;if(p==="intake2
 function saveGhToken(){const t=document.getElementById("ghTokenInput");if(!t)return;ghToken=t.value.trim();localStorage.setItem("cb_gh_token",ghToken);const btn=document.getElementById("ghTokenBtn");if(btn){btn.textContent="Saved!";setTimeout(()=>{btn.textContent="Save token";},2000);}document.getElementById("ghTokenStatus").textContent=ghToken?"GitHub auto-save active":"No token set";}
 function lockAdmin(){adminUnlocked=false;document.getElementById("adminBar").className="abar locked";document.getElementById("adminLabel").textContent="Rep mode";document.getElementById("adminBtns").innerHTML=`<button class="btn btn-sm" onclick="openAdminPw()">Admin login</button>`;document.getElementById("exportBtn").classList.remove("visible");const gs=document.getElementById("ghSettingsBar");if(gs)gs.style.display="none";fullRender();}
 function openEditFirm(sk,id){editDraft=Object.assign({_sk:sk},JSON.parse(JSON.stringify(appData[sk].firms.find(f=>f.id===id))));modalMode="firm";fullRender();}
-function saveFirmEdit(){const sk=editDraft._sk,firms=appData[sk].firms,idx=firms.findIndex(f=>f.id===editDraft.id);const u={id:editDraft.id,name:document.getElementById("ef_name").value,pronunciation:document.getElementById("ef_pronunciation").value,lastUpdated:new Date().toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}),accepting:document.getElementById("ef_a").value==="true",priority:document.getElementById("ef_p").value,minors:document.getElementById("ef_m").value,marketing:document.getElementById("ef_marketing").value,minPD:document.getElementById("ef_minPD").value,trtNoTrt:document.getElementById("ef_trtNoTrt").value,trtWithTrt:document.getElementById("ef_trtWithTrt").value,geographic:document.getElementById("ef_geographic").value,requirements:document.getElementById("ef_requirements").value,exclusions:document.getElementById("ef_exclusions").value,contact:document.getElementById("ef_contact").value,notes:document.getElementById("ef_notes").value};if(idx>-1)firms[idx]=u;else firms.push(u);saveData("ghFirmStatus");closeModal();}
-function deleteFirm(sk,id){if(!confirm("Remove this firm?"))return;appData[sk].firms=appData[sk].firms.filter(f=>f.id!==id);saveData();fullRender();}
+async function saveFirmEdit(){
+  const sk=editDraft._sk,firms=appData[sk].firms,idx=firms.findIndex(f=>f.id===editDraft.id);
+  const u={id:editDraft.id,name:document.getElementById("ef_name").value,pronunciation:document.getElementById("ef_pronunciation").value,lastUpdated:new Date().toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}),accepting:document.getElementById("ef_a").value==="true",priority:document.getElementById("ef_p").value,minors:document.getElementById("ef_m").value,marketing:document.getElementById("ef_marketing").value,minPD:document.getElementById("ef_minPD").value,trtNoTrt:document.getElementById("ef_trtNoTrt").value,trtWithTrt:document.getElementById("ef_trtWithTrt").value,geographic:document.getElementById("ef_geographic").value,requirements:document.getElementById("ef_requirements").value,exclusions:document.getElementById("ef_exclusions").value,contact:document.getElementById("ef_contact").value,notes:document.getElementById("ef_notes").value};
+  if(idx>-1)firms[idx]=u;else firms.push(u);
+  // Show saving status in modal footer before closing
+  const saveBtn=document.querySelector(".modal-footer .btn-green");
+  if(saveBtn){saveBtn.disabled=true;saveBtn.textContent="Saving...";}
+  await saveData(null);
+  closeModal();
+}
+async function deleteFirm(sk,id){if(!confirm("Remove this firm?"))return;appData[sk].firms=appData[sk].firms.filter(f=>f.id!==id);await saveData(null);fullRender();}
 function openEditState(key){const s=appData[key];stateDraft={key,abbr:s.abbr,notes:s.notes,faultType:s.faultType||'',keyThreshold:s.keyThreshold||'',signWhen:s.signWhen||'',doNotSign:s.doNotSign||'',disqualifiers:s.disqualifiers||''};modalMode='state';fullRender();}
-function saveStateEdit(oldKey){const nk=(document.getElementById('es_n').value||oldKey).trim();if(nk!==oldKey){appData[nk]=appData[oldKey];delete appData[oldKey];}const d=appData[nk];d.abbr=document.getElementById('es_a').value;d.faultType=document.getElementById('es_faultType').value;d.keyThreshold=document.getElementById('es_keyThreshold').value;d.signWhen=document.getElementById('es_signWhen').value;d.doNotSign=document.getElementById('es_doNotSign').value;d.disqualifiers=document.getElementById('es_disqualifiers').value;if(curState===oldKey)curState=nk;saveData('ghStateStatus');closeModal();}
-function deleteState(key){if(!confirm("Delete "+key+"?"))return;delete appData[key];curState=null;saveData();closeModal();}
+async function saveStateEdit(oldKey){const nk=(document.getElementById('es_n').value||oldKey).trim();if(nk!==oldKey){appData[nk]=appData[oldKey];delete appData[oldKey];}const d=appData[nk];d.abbr=document.getElementById('es_a').value;d.faultType=document.getElementById('es_faultType').value;d.keyThreshold=document.getElementById('es_keyThreshold').value;d.signWhen=document.getElementById('es_signWhen').value;d.doNotSign=document.getElementById('es_doNotSign').value;d.disqualifiers=document.getElementById('es_disqualifiers').value;if(curState===oldKey)curState=nk;const saveBtn=document.querySelector('.modal-footer .btn-green');if(saveBtn){saveBtn.disabled=true;saveBtn.textContent='Saving...';}await saveData(null);closeModal();}
+async function deleteState(key){if(!confirm("Delete "+key+"?"))return;delete appData[key];curState=null;await saveData(null);closeModal();}
 function openAddState(){modalMode="addstate";fullRender();}
-function addState(){const k=(document.getElementById('as_n').value||'').trim();if(!k)return;appData[k]={abbr:document.getElementById('as_a').value||'',notes:'',faultType:'',keyThreshold:'',signWhen:'',doNotSign:'',disqualifiers:'',firms:[]};curState=k;saveData();closeModal();}
+async function addState(){const k=(document.getElementById('as_n').value||'').trim();if(!k)return;appData[k]={abbr:document.getElementById('as_a').value||'',notes:'',faultType:'',keyThreshold:'',signWhen:'',doNotSign:'',disqualifiers:'',firms:[]};curState=k;await saveData(null);closeModal();}
 function saveInlineNotes(key){const el=document.getElementById("inlineNotes");if(el){appData[key].notes=el.value;saveData();fullRender();}}
-function saveInlineField(key,field,elId,statusElId){const el=document.getElementById(elId);if(el){appData[key][field]=el.value;saveData(statusElId);fullRender();}}
+async function saveInlineField(key,field,elId,statusElId){const el=document.getElementById(elId);if(el){appData[key][field]=el.value;const btn=el.parentElement?el.parentElement.querySelector('button'):null;if(btn){btn.disabled=true;btn.textContent='Saving...';}await saveData(statusElId);if(btn){btn.disabled=false;btn.textContent='Save';}fullRender();}}
 function openAddFirm(sk){editDraft={id:uid(),_sk:sk,_new:true,name:"",pronunciation:"",accepting:true,priority:"High",minors:"No minors unless catastrophic",marketing:"Belief Marketing",minPD:"",trtNoTrt:TRT.noTrt,trtWithTrt:TRT.withTrt,geographic:"",requirements:"",exclusions:"",contact:"",notes:""};modalMode="firm";fullRender();}
 
 // ── Resizer drag logic ──

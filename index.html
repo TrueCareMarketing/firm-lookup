@@ -1,12 +1,12 @@
 <html lang="en"><plasmo-csui id="plasmo-inspector"></plasmo-csui><head><meta charset="UTF-8">
- 
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Intake — State &amp; Firm Lookup</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;overflow:hidden;}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#e8e8e4;color:#1a1a1a;}
- 
+
 /* ── Header ── */
 .header{background:#f0f0ec;border-bottom:1px solid #d4d4ce;padding:11px 24px;display:flex;align-items:center;justify-content:space-between;height:46px;}
 .header-logo{font-size:15px;font-weight:600;color:#1a1a1a;letter-spacing:0.01em;}
@@ -16,7 +16,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .export-btn{font-size:13px;padding:4px 11px;border-radius:5px;background:#daeeff;color:#2a6098;border:1px solid #a8c8e8;cursor:pointer;font-weight:600;display:none;transition:background 0.15s;}
 .export-btn:hover{background:#c8e4ff;}
 .export-btn.visible{display:inline-block;}
- 
+
 /* ── Split panel layout ── */
 .app{display:flex;height:calc(100vh - 46px);overflow:hidden;}
 .panel-left{width:280px;min-width:180px;max-width:480px;background:#f0f0ec;border-right:1px solid #d4d4ce;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;}
@@ -24,21 +24,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .resizer:hover,.resizer.dragging{background:#c8c8c2;}
 .panel-right{flex:1;overflow-y:auto;background:#e8e8e4;min-width:0;}
 .panel-right-inner{padding:28px 32px;max-width:860px;}
- 
+
 /* ── Left panel sections ── */
 .left-top{padding:12px 12px 0;flex-shrink:0;}
 .left-list{flex:1;overflow-y:auto;padding:0 12px 12px;}
 .left-list::-webkit-scrollbar{width:3px;}
 .left-list::-webkit-scrollbar-track{background:transparent;}
 .left-list::-webkit-scrollbar-thumb{background:#c8c8c0;border-radius:3px;}
- 
+
 /* ── Admin bar ── */
 .abar{border-radius:6px;padding:7px 10px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:5px;font-size:13px;}
 .abar.locked{background:#e8e8e2;border:1px solid #d0d0c8;}
 .abar.unlocked{background:#ddf5ea;border:1px solid #90cfaa;}
 .abar .lbl{font-weight:500;color:#888;}
 .abar.unlocked .lbl{color:#3a8a5a;}
- 
+
 /* ── Search ── */
 .search-wrap{margin-bottom:10px;position:relative;}
 .search-wrap input{width:100%;font-size:14px;padding:8px 11px 8px 30px;border:1px solid #d0d0c8;border-radius:6px;background:#ebebе6;color:#1a1a1a;outline:none;transition:border 0.15s;}
@@ -46,7 +46,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .search-wrap input:focus{border-color:#3a8a5a;background:#f4f4f0;box-shadow:0 0 0 2px rgba(58,138,90,0.1);}
 .search-wrap input::placeholder{color:#aaa;}
 .search-icon{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:#aaa;font-size:14px;pointer-events:none;}
- 
+
 /* ── State list ── */
 .hint{font-size:12px;color:#aaa;margin-bottom:8px;letter-spacing:0.02em;}
 .state-row{display:flex;align-items:center;justify-content:space-between;padding:9px 11px;background:#f0f0ec;border:1px solid #d8d8d2;border-radius:6px;margin-bottom:3px;cursor:pointer;transition:all 0.1s;}
@@ -58,7 +58,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .sr-right{display:flex;align-items:center;gap:5px;}
 .sr-firms{font-size:12px;color:#aaa;}
 .sr-arrow{color:#bbb;font-size:13px;}
- 
+
 /* ── Right panel — state detail ── */
 .empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:calc(100vh - 100px);color:#bbb;text-align:center;padding:40px;}
 .empty-icon{font-size:32px;margin-bottom:14px;opacity:0.3;}
@@ -81,7 +81,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .sec-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:#aaa;margin:18px 0 9px;display:flex;align-items:center;gap:8px;}
 .sec-title::after{content:'';flex:1;height:1px;background:#d8d8d2;}
 .right-admin-bar{display:flex;align-items:center;gap:8px;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid #d8d8d2;}
- 
+
 /* ── Firm cards ── */
 .firm-card{background:#f0f0ec;border:1px solid #d8d8d2;border-radius:9px;padding:14px 16px;margin-bottom:8px;transition:border-color 0.12s;}
 .firm-card:hover{border-color:#b8b8b0;}
@@ -99,11 +99,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .req{display:flex;align-items:baseline;gap:10px;padding:7px 13px;border-bottom:1px solid #e0e0da;background:#f0f0ec;}
 .req:last-child{border-bottom:none;}
 .req:nth-child(even){background:#e8e8e4;}
-.req-lbl{font-size:12px;font-weight:600;color:#999;min-width:160px;flex-shrink:0;letter-spacing:0.02em;}
-.req-val{font-size:14px;color:#333;line-height:1.5;}
+.req-lbl{font-size:12px;font-weight:600;color:#666;min-width:160px;flex-shrink:0;letter-spacing:0.02em;}
+.req-val{font-size:14px;color:#1a1a1a;line-height:1.5;}
 .rep-note{background:#faf5e0;border:1px solid #dcc870;border-radius:6px;padding:9px 12px;font-size:14px;color:#6a4a08;line-height:1.65;border-left:3px solid #b89010;}
 .rep-note strong{font-weight:700;color:#7a5810;}
- 
+
 /* ── Buttons ── */
 .btn{font-size:13px;padding:5px 11px;border-radius:6px;border:1px solid #c8c8c0;background:#e8e8e2;color:#555;cursor:pointer;transition:all 0.12s;font-weight:500;}
 .btn:hover{background:#d8d8d0;color:#222;}
@@ -145,7 +145,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .slack-status.sending{display:block;background:#e8f0fe;color:#1a4878;border:1px solid #98c0e8;}
 .slack-status.sent{display:block;background:#d8f0e2;color:#1a6838;border:1px solid #98d8b0;}
 .slack-status.error{display:block;background:#f8e0e0;color:#a02828;border:1px solid #e0a0a0;}
- 
+.state-fields{display:flex;flex-direction:column;gap:10px;margin-bottom:20px;}
+.sf-block{background:#f0f0ec;border:1px solid #d4d4ce;border-radius:8px;padding:12px 14px;}
+.sf-block .sf-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#aaa;margin-bottom:6px;}
+.sf-block .sf-value{font-size:14px;color:#1a1a1a;line-height:1.75;white-space:pre-wrap;}
+.sf-block .sf-value.empty{color:#bbb;font-style:italic;font-size:13px;}
+.sf-block.sign{border-left:3px solid #3a8a5a;}
+.sf-block.nosign{border-left:3px solid #c0392b;}
+.sf-block.disq{border-left:3px solid #e67e22;}
+.sf-block textarea{width:100%;font-size:14px;color:#1a1a1a;background:#fff;border:1px solid #3a8a5a;border-radius:6px;padding:8px 11px;line-height:1.65;resize:vertical;min-height:70px;outline:none;font-family:inherit;}
+.sf-block textarea:focus{box-shadow:0 0 0 2px rgba(58,138,90,0.1);}
+.sib-save-row{display:flex;gap:6px;justify-content:flex-end;margin-top:6px;}
+.sib-save-row span{font-size:11px;color:#bbb;align-self:center;}
+
 /* ── Modal ── */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px;}
 .modal{background:#f0f0ec;border-radius:12px;border:1px solid #c8c8c0;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;padding:24px;box-shadow:0 8px 32px rgba(0,0,0,0.15);}
@@ -192,7 +204,7 @@ Injury + treatment recommended
 Must be 0% at fault
 Even 1% fault can bar recovery
 Strong liability important
- 
+
 Intake Tip
 Ask how accident happened carefully
 Confirm client did not contribute to crash
@@ -209,24 +221,24 @@ Clear fault cases work best</textarea>
 </div>
 <div id="flagModalRoot"></div>
 <div id="modalRoot"></div>
- 
+
 <script>
 const TRT={noTrt:"Under 1 month with no treatment",withTrt:"31-90 days with treatment"};
 function LOWE(id,geo){return{id,name:"Lowe Law Firm",accepting:true,priority:"High",marketing:"Belief Marketing",minPD:"",minors:"No minors unless catastrophic",geographic:geo,requirements:"",exclusions:"No minors unless catastrophic",trtNoTrt:TRT.noTrt,trtWithTrt:TRT.withTrt,contact:"",notes:"No minors unless catastrophic."};}
- 
-const DEFAULT_DATA={"Alabama":{"abbr":"AL","notes":"Very tough — client is barred if even 1% at fault.","claimFiling":"Quick Intake Rule\nInjury + treatment recommended\nMust be 0% at fault\nEven 1% fault can bar recovery\nStrong liability important\n\nIntake Tip\nAsk how accident happened carefully\nConfirm client did not contribute to crash\nClear fault cases work best","faultType":"At-Fault","firms":[{"id":"al1","name":"Turnbull","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"16 Years Old","geographic":"AL, GA, TX","requirements":"","exclusions":"","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"Also covers GA and TX."}]},"Alaska":{"abbr":"AK","notes":"Both drivers can share blame regardless of fault.","claimFiling":"Injury + treatment recommended (ER, urgent care, chiro, PT)\nNo PIP requirement\nBI claim allowed when another driver caused the accident\nStrong property damage helps value\n\nIntake Tip\nConfirm other driver at fault\nAsk if treatment started or scheduled\nMost cases qualify once treatment begins","faultType":"At-Fault","firms":[{"id":"ak1","name":"Lowe Law Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"AK","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"Arizona":{"abbr":"AZ","notes":"Both drivers can share blame regardless of fault.","claimFiling":"Quick Intake Rule\nInjury + treatment recommended\nNo injury threshold required\nSoft tissue cases commonly accepted\n\nIntake Tip\nConfirm injuries and treatment plan\nOngoing care helps case value","faultType":"","firms":[{"id":"az1","name":"Theut Scaringelli & Kupiszewski (TSK)","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"AZ","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"Arkansas":{"abbr":"AR","notes":"Both drivers can share blame regardless of fault.","claimFiling":"","faultType":"","firms":[{"id":"ar1","name":"Lowe Law Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"AR","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"California":{"abbr":"CA","notes":"Both drivers can share blame regardless of fault. CA cases tend to have high value.","claimFiling":"","faultType":"","firms":[{"id":"ca1","name":"M&Y Personal Injury Lawyers","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"CA","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."},{"id":"ca2","name":"Larry H. Parker (LHP)","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"CA","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"Colorado":{"abbr":"CO","notes":"Client cannot be more than 50% at fault.","claimFiling":"","faultType":"","firms":[{"id":"co1","name":"Levine Law","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"CO","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"Georgia":{"abbr":"GA","notes":"Client cannot be more than 50% at fault. High rate of uninsured drivers.","claimFiling":"","faultType":"","firms":[{"id":"ga2","name":"The Injury Law","accepting":true,"priority":"High","marketing":"TrueCare Marketing","minPD":"Moderate to Totaled","minors":"16 Years Old","geographic":"Metro Atlanta (up to 2 hrs), Savannah, Brunswick","requirements":"Hospital or urgent care visit within 4 weeks. They handle PD for clients.","exclusions":"","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"Metro Atlanta up to 2 hrs out. Savannah & Brunswick OK. Must treat within 4 weeks."},{"id":"f17767027395844qu","name":"Spartan Law Group","accepting":true,"priority":"High","minors":"16 Years Old","marketing":"Belief Marketing","minPD":"","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","geographic":"Statewide","requirements":"","exclusions":"","contact":"","notes":""}]},"Idaho":{"abbr":"ID","notes":"Client cannot be more than 50% at fault.","claimFiling":"","faultType":"","firms":[{"id":"id1","name":"Lowe Law Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"ID","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"Illinois":{"abbr":"IL","notes":"Client cannot be more than 51% at fault.","claimFiling":"","faultType":"","firms":[{"id":"il2","name":"Lowe Law Firm","accepting":true,"priority":"Medium","minors":"16 Years Old","marketing":"Belief Marketing","minPD":"","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","geographic":"IL","requirements":"","exclusions":"No minors unless catastrophic","contact":"","notes":""},{"id":"f17767028356441yn","name":"Tony S. Kalogerakos Injury Lawyers","accepting":true,"priority":"High","minors":"16 Years Old","marketing":"Belief Marketing","minPD":"","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","geographic":"Statewide","requirements":"","exclusions":"","contact":"","notes":""}]},"Iowa":{"abbr":"IA","notes":"Both drivers can share blame regardless of fault.","claimFiling":"","faultType":"","firms":[{"id":"ia1","name":"Lowe Law Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"IA","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"Kansas":{"abbr":"KS","notes":"Both drivers can share blame regardless of fault.","claimFiling":"","faultType":"","firms":[{"id":"ks1","name":"Lowe Law Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"KS","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"Kentucky":{"abbr":"KY","notes":"Both drivers can share blame regardless of fault.","claimFiling":"Injury + treatment recommended (ER, urgent care, chiro, PT)\nPIP pays first up to $10,000\n\nBI claim allowed when:\nMedical bills exceed $1,000\nBroken bone\nPermanent injury or scarring\nDisability\n\nIf driver rejected PIP, they can pursue BI claim immediately\nStrong property damage helps value","faultType":"Choice No-Fault (PIP required unless rejected)","firms":[{"id":"ky1","name":"Lowe Law Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"KY","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"Louisiana":{"abbr":"LA","notes":"Both drivers can share blame regardless of fault.","claimFiling":"","faultType":"","firms":[{"id":"la1","name":"Imbornone Law Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"LA","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"Maryland":{"abbr":"MD","notes":"Client cannot be more than 50% at fault.","claimFiling":"","faultType":"","firms":[{"id":"f17767053093382bl","name":"Whitlock Law","accepting":true,"priority":"High","minors":"16 Years Old","marketing":"Belief Marketing","minPD":"","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","geographic":"Statewide","requirements":"","exclusions":"","contact":"","notes":""}]},"Michigan":{"abbr":"MI","notes":"No-fault state — Michigan has strong PIP coverage requirements.","claimFiling":"","faultType":"","firms":[]},"Minnesota":{"abbr":"MN","notes":"Both drivers can share blame regardless of fault.","claimFiling":"A claim against the at-fault driver (BI claim) can typically be made when the injury meets Minnesota’s tort threshold, such as:\n\nThreshold to step outside No-Fault\n\nA person can pursue the at-fault driver if ANY apply:\n\nMedical expenses exceed $4,000\nPermanent injury or disability\nPermanent disfigurement or scarring\nDisability lasting 60+ days\nDeath","faultType":"Minnesota requires drivers to first use their own Personal Injury Protection (PIP) coverage after an accident, regardless of fault.","firms":[{"id":"mn1","name":"Lowe Law Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"MN","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"Mississippi":{"abbr":"MS","notes":"Both drivers can share blame regardless of fault.","claimFiling":"","faultType":"","firms":[]},"Missouri":{"abbr":"MO","notes":"Both drivers can share blame regardless of fault.","claimFiling":"","faultType":"","firms":[{"id":"mo1","name":"Beck & Beck Missouri Car Accident Lawyers (B&B)","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"MO","requirements":"Must submit intake link with ATC & Agreement.","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"https://becklawmo.com/belief-leads/","notes":"Must submit link with intake, ATC & Agreement: becklawmo.com/belief-leads/"}]},"Montana":{"abbr":"MT","notes":"Both drivers can share blame regardless of fault.","claimFiling":"","faultType":"","firms":[{"id":"mt1","name":"Lowe Law Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"MT","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"Nebraska":{"abbr":"NE","notes":"Client cannot be more than 50% at fault.","claimFiling":"","faultType":"","firms":[{"id":"ne1","name":"Lowe Law Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"NE","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"Nevada":{"abbr":"NV","notes":"Client cannot be more than 51% at fault.","claimFiling":"","faultType":"","firms":[{"id":"nv1","name":"Richard Harris Law Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"NV","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."},{"id":"nv2","name":"Edward M. Bernstein & Associates (EMB)","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"NV","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"New Jersey":{"abbr":"NJ","notes":"Client cannot be more than 51% at fault.","claimFiling":"","faultType":"","firms":[{"id":"nj1","name":"Kwartler Manus","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"NJ","requirements":"MUST have 2 people in the car.","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"MUST have 2 people in car. No minors unless catastrophic."}]},"New Mexico":{"abbr":"NM","notes":"Both drivers can share blame regardless of fault.","claimFiling":"","faultType":"","firms":[{"id":"nm1","name":"KRW Lawyers","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"TX, NM","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"Also covers TX. No minors unless catastrophic."}]},"North Carolina":{"abbr":"NC","notes":"Tough state — client is barred if even 1% at fault.","claimFiling":"","faultType":"","firms":[{"id":"nc1","name":"Spartan Law Firm","accepting":true,"priority":"High","minors":"16 Years Old","marketing":"Believe Marketing","minPD":"","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","geographic":"NC, GA, IL, OH, TN","requirements":"","exclusions":"","contact":"","notes":"Also covers GA, IL, OH, TN."}]},"North Dakota":{"abbr":"ND","notes":"Both drivers can share blame regardless of fault.","claimFiling":"","faultType":"","firms":[{"id":"nd1","name":"Lowe Law Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"ND","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"Ohio":{"abbr":"OH","notes":"Client cannot be more than 51% at fault.","claimFiling":"","faultType":"","firms":[{"id":"oh1","name":"Spartan Law Firm","accepting":true,"priority":"High","marketing":"TrueCare Marketing","minPD":"","minors":"16 Years Old","geographic":"NC, GA, IL, OH, TN","requirements":"","exclusions":"","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"Also covers NC, GA, IL, TN."},{"id":"oh2","name":"Lowe Law Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"OH","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"Oklahoma":{"abbr":"OK","notes":"Both drivers can share blame regardless of fault.","claimFiling":"","faultType":"","firms":[{"id":"ok1","name":"Lowe Law Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"OK","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"Oregon":{"abbr":"OR","notes":"Both drivers can share blame regardless of fault.","claimFiling":"","faultType":"","firms":[{"id":"or1","name":"Lowe Law Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"OR","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"Pennsylvania":{"abbr":"PA","notes":"Client cannot be more than 51% at fault.","claimFiling":"","faultType":"","firms":[{"id":"pa1","name":"Kwartler Manus","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"Philadelphia + Delaware, Montgomery, Chester, Bucks counties; Pittsburgh metro","requirements":"Philly area or Pittsburgh metro ONLY. MUST have 2 people in the car.","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"Philly/Pittsburgh ONLY. MUST have 2 people in car. No minors unless catastrophic."}]},"South Carolina":{"abbr":"SC","notes":"Client cannot be more than 51% at fault.","claimFiling":"","faultType":"","firms":[{"id":"sc1","name":"Woron and Dhillon Firm (W&D)","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"$2,000","minors":"No minors unless catastrophic","geographic":"SC — Allendale, Orangeburg, Hampton, Jasper, Williamsburg preferred","requirements":"$2K min PD. Liberal venue counties: Allendale, Orangeburg, Hampton, Jasper, Williamsburg.","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"$2K min PD. Liberal venues preferred. No minors unless catastrophic."}]},"South Dakota":{"abbr":"SD","notes":"Both drivers can share blame regardless of fault.","claimFiling":"","faultType":"","firms":[{"id":"sd1","name":"Lowe Law Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"SD","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"Tennessee":{"abbr":"TN","notes":"Client cannot be more than 50% at fault.","claimFiling":"","faultType":"","firms":[{"id":"tn1","name":"Spartan Law Firm","accepting":true,"priority":"High","marketing":"TrueCare Marketing","minPD":"","minors":"16 Years Old","geographic":"NC, GA, IL, OH, TN","requirements":"","exclusions":"","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"Also covers NC, GA, IL, OH."}]},"Texas":{"abbr":"TX","notes":"Client cannot be more than 51% at fault. TX tends to have high case values.","claimFiling":"","faultType":"","firms":[{"id":"tx1","name":"Edward Law Group","accepting":true,"priority":"High","minors":"No minors unless catastrophic","marketing":"Belief Marketing","minPD":"$3,500","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","geographic":"TX","requirements":"Min $3,500 for PD.","exclusions":"No minors unless catastrophic","contact":"","notes":""},{"id":"tx2","name":"KRW Lawyers","accepting":true,"priority":"Medium","minors":"No minors unless catastrophic","marketing":"Belief Marketing","minPD":"","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","geographic":"TX, NM","requirements":"","exclusions":"No minors unless catastrophic","contact":"","notes":""},{"id":"tx3","name":"Anderson Law","accepting":true,"priority":"High","minors":"16 Years Old","marketing":"Belief Marketing","minPD":"Over $1,000","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","geographic":"Dallas/FTW (50mi), Austin (30mi)","requirements":"PD over $1,000. Dallas/FTW 50mi or Austin 30mi only.","exclusions":"","contact":"","notes":""},{"id":"tx4","name":"Turnbull","accepting":true,"priority":"Medium","minors":"16 Years Old","marketing":"Belief Marketing","minPD":"","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","geographic":"AL, GA, TX","requirements":"","exclusions":"","contact":"","notes":""}]},"Utah":{"abbr":"UT","notes":"Client cannot be more than 50% at fault.","claimFiling":"","faultType":"","firms":[{"id":"ut1","name":"Lowe Law Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"UT","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"Virginia":{"abbr":"VA","notes":"Client cannot be more than 50% at fault.","claimFiling":"","faultType":"","firms":[{"id":"f1776705244590lot","name":"Whitlock Law","accepting":true,"priority":"High","minors":"16 Years Old","marketing":"Belief Marketing","minPD":"","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","geographic":"Satewide","requirements":"","exclusions":"","contact":"","notes":""}]},"Washington":{"abbr":"WA","notes":"Both drivers can share blame regardless of fault.","claimFiling":"","faultType":"","firms":[{"id":"wa1","name":"Bernard Law","accepting":true,"priority":"High","minors":"16 Years Old","marketing":"Belief Marketing","minPD":"","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","geographic":"WA","requirements":"Anyone under 12 does NOT need a signed agreement — attorney handles directly with guardian.","exclusions":"No minors unless catastrophic","contact":"","notes":""},{"id":"wa2","name":"Herschensohn Law Firm (ZBH)","accepting":true,"priority":"High","minors":"16 Years Old","marketing":"Belief Marketing","minPD":"","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","geographic":"WA","requirements":"Last 4 of SSN required on agreement. Full SSN required to proceed.","exclusions":"No minors unless catastrophic","contact":"","notes":""}]},"Wisconsin":{"abbr":"WI","notes":"Both drivers can share blame regardless of fault.","claimFiling":"","faultType":"","firms":[{"id":"wi1","name":"Lowe Law Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"WI","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"Wyoming":{"abbr":"WY","notes":"Both drivers can share blame regardless of fault.","claimFiling":"","faultType":"","firms":[{"id":"wy1","name":"Lowe Law Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"WY","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]}};
- 
+
+const DEFAULT_DATA={"Alabama":{"abbr":"AL","notes":"Very tough \u2014 client is barred if even 1% at fault.","faultType":"At-Fault / Pure Contributory Negligence","keyThreshold":"Client can pursue BI claim against the other driver, but if the client is even slightly at fault, recovery can be barred.","signWhen":"\u2022 Clear liability on other driver\n\u2022 Rear-end, red-light, passenger, parked vehicle, or police-supported fault\n\u2022 Injury reported\n\u2022 Treatment started or scheduled\n\u2022 Strong property damage helps","doNotSign":"\u2022 No injury\n\u2022 Client may be even 1% at fault\n\u2022 Liability unclear\n\u2022 Low-impact soft tissue only with no treatment\n\u2022 Only property damage claim","disqualifiers":"\u2022 Alabama uses pure contributory negligence \u2014 even partial fault can bar recovery.\n\u2022 This should be one of your strictest states.\n\u2022 Do not sign lane-change disputes, backing-up disputes, shared-fault intersections, or unclear merge cases unless liability evidence is strong.","firms":[{"id":"al1","name":"Turnbull","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"16 Years Old","geographic":"AL, GA, TX","requirements":"","exclusions":"","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"Also covers GA and TX."}]},"Alaska":{"abbr":"AK","notes":"Both drivers can share blame regardless of fault.","faultType":"At-Fault","keyThreshold":"Injury + treatment recommended (ER, urgent care, chiro, PT)\nNo PIP requirement\nBI claim allowed when another driver caused the accident\nStrong property damage helps value\n\nIntake Tip\nConfirm other driver at fault\nAsk if treatment started or scheduled\nMost cases qualify once treatment begins","signWhen":"","doNotSign":"","disqualifiers":"","firms":[{"id":"ak1","name":"Lowe Law Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"AK","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"Arizona":{"abbr":"AZ","notes":"Both drivers can share blame regardless of fault.","faultType":"","keyThreshold":"Quick Intake Rule\nInjury + treatment recommended\nNo injury threshold required\nSoft tissue cases commonly accepted\n\nIntake Tip\nConfirm injuries and treatment plan\nOngoing care helps case value","signWhen":"","doNotSign":"","disqualifiers":"","firms":[{"id":"az1","name":"Theut Scaringelli & Kupiszewski (TSK)","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"AZ","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"Arkansas":{"abbr":"AR","notes":"Both drivers can share blame regardless of fault.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","firms":[{"id":"ar1","name":"Lowe Law Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"AR","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"California":{"abbr":"CA","notes":"Both drivers can share blame regardless of fault. CA cases tend to have high value.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","firms":[{"id":"ca1","name":"M&Y Personal Injury Lawyers","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"CA","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."},{"id":"ca2","name":"Larry H. Parker (LHP)","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"CA","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"Colorado":{"abbr":"CO","notes":"Client cannot be more than 50% at fault.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","firms":[{"id":"co1","name":"Levine Law","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"CO","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"Georgia":{"abbr":"GA","notes":"Client cannot be more than 50% at fault. High rate of uninsured drivers.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","firms":[{"id":"ga2","name":"The Injury Law","accepting":true,"priority":"High","marketing":"TrueCare Marketing","minPD":"Moderate to Totaled","minors":"16 Years Old","geographic":"Metro Atlanta (up to 2 hrs), Savannah, Brunswick","requirements":"Hospital or urgent care visit within 4 weeks. They handle PD for clients.","exclusions":"","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"Metro Atlanta up to 2 hrs out. Savannah & Brunswick OK. Must treat within 4 weeks."},{"id":"f17767027395844qu","name":"Spartan Law Group","accepting":true,"priority":"High","minors":"16 Years Old","marketing":"Belief Marketing","minPD":"","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","geographic":"Statewide","requirements":"","exclusions":"","contact":"","notes":""}]},"Idaho":{"abbr":"ID","notes":"Client cannot be more than 50% at fault.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","firms":[{"id":"id1","name":"Lowe Law Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"ID","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"Illinois":{"abbr":"IL","notes":"Client cannot be more than 51% at fault.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","firms":[{"id":"il2","name":"Lowe Law Firm","accepting":true,"priority":"Medium","minors":"16 Years Old","marketing":"Belief Marketing","minPD":"","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","geographic":"IL","requirements":"","exclusions":"No minors unless catastrophic","contact":"","notes":""},{"id":"f17767028356441yn","name":"Tony S. Kalogerakos Injury Lawyers","accepting":true,"priority":"High","minors":"16 Years Old","marketing":"Belief Marketing","minPD":"","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","geographic":"Statewide","requirements":"","exclusions":"","contact":"","notes":""}]},"Iowa":{"abbr":"IA","notes":"Both drivers can share blame regardless of fault.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","firms":[{"id":"ia1","name":"Lowe Law Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"IA","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"Kansas":{"abbr":"KS","notes":"Both drivers can share blame regardless of fault.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","firms":[{"id":"ks1","name":"Lowe Law Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"KS","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"Kentucky":{"abbr":"KY","notes":"Both drivers can share blame regardless of fault.","faultType":"Choice No-Fault (PIP required unless rejected)","keyThreshold":"Injury + treatment recommended (ER, urgent care, chiro, PT)\nPIP pays first up to $10,000\n\nBI claim allowed when:\nMedical bills exceed $1,000\nBroken bone\nPermanent injury or scarring\nDisability\n\nIf driver rejected PIP, they can pursue BI claim immediately\nStrong property damage helps value","signWhen":"","doNotSign":"","disqualifiers":"","firms":[{"id":"ky1","name":"Lowe Law Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"KY","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"Louisiana":{"abbr":"LA","notes":"Both drivers can share blame regardless of fault.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","firms":[{"id":"la1","name":"Imbornone Law Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"LA","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"Maryland":{"abbr":"MD","notes":"Client cannot be more than 50% at fault.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","firms":[{"id":"f17767053093382bl","name":"Whitlock Law","accepting":true,"priority":"High","minors":"16 Years Old","marketing":"Belief Marketing","minPD":"","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","geographic":"Statewide","requirements":"","exclusions":"","contact":"","notes":""}]},"Michigan":{"abbr":"MI","notes":"No-fault state — Michigan has strong PIP coverage requirements.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","firms":[]},"Minnesota":{"abbr":"MN","notes":"Both drivers can share blame regardless of fault.","faultType":"Minnesota requires drivers to first use their own Personal Injury Protection (PIP) coverage after an accident, regardless of fault.","keyThreshold":"A claim against the at-fault driver (BI claim) can typically be made when the injury meets Minnesota’s tort threshold, such as:\n\nThreshold to step outside No-Fault\n\nA person can pursue the at-fault driver if ANY apply:\n\nMedical expenses exceed $4,000\nPermanent injury or disability\nPermanent disfigurement or scarring\nDisability lasting 60+ days\nDeath","signWhen":"","doNotSign":"","disqualifiers":"","firms":[{"id":"mn1","name":"Lowe Law Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"MN","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"Mississippi":{"abbr":"MS","notes":"Both drivers can share blame regardless of fault.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","firms":[]},"Missouri":{"abbr":"MO","notes":"Both drivers can share blame regardless of fault.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","firms":[{"id":"mo1","name":"Beck & Beck Missouri Car Accident Lawyers (B&B)","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"MO","requirements":"Must submit intake link with ATC & Agreement.","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"https://becklawmo.com/belief-leads/","notes":"Must submit link with intake, ATC & Agreement: becklawmo.com/belief-leads/"}]},"Montana":{"abbr":"MT","notes":"Both drivers can share blame regardless of fault.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","firms":[{"id":"mt1","name":"Lowe Law Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"MT","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"Nebraska":{"abbr":"NE","notes":"Client cannot be more than 50% at fault.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","firms":[{"id":"ne1","name":"Lowe Law Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"NE","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"Nevada":{"abbr":"NV","notes":"Client cannot be more than 51% at fault.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","firms":[{"id":"nv1","name":"Richard Harris Law Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"NV","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."},{"id":"nv2","name":"Edward M. Bernstein & Associates (EMB)","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"NV","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"New Jersey":{"abbr":"NJ","notes":"Client cannot be more than 51% at fault.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","firms":[{"id":"nj1","name":"Kwartler Manus","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"NJ","requirements":"MUST have 2 people in the car.","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"MUST have 2 people in car. No minors unless catastrophic."}]},"New Mexico":{"abbr":"NM","notes":"Both drivers can share blame regardless of fault.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","firms":[{"id":"nm1","name":"KRW Lawyers","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"TX, NM","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"Also covers TX. No minors unless catastrophic."}]},"North Carolina":{"abbr":"NC","notes":"Tough state — client is barred if even 1% at fault.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","firms":[{"id":"nc1","name":"Spartan Law Firm","accepting":true,"priority":"High","minors":"16 Years Old","marketing":"Believe Marketing","minPD":"","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","geographic":"NC, GA, IL, OH, TN","requirements":"","exclusions":"","contact":"","notes":"Also covers GA, IL, OH, TN."}]},"North Dakota":{"abbr":"ND","notes":"Both drivers can share blame regardless of fault.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","firms":[{"id":"nd1","name":"Lowe Law Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"ND","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"Ohio":{"abbr":"OH","notes":"Client cannot be more than 51% at fault.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","firms":[{"id":"oh1","name":"Spartan Law Firm","accepting":true,"priority":"High","marketing":"TrueCare Marketing","minPD":"","minors":"16 Years Old","geographic":"NC, GA, IL, OH, TN","requirements":"","exclusions":"","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"Also covers NC, GA, IL, TN."},{"id":"oh2","name":"Lowe Law Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"OH","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"Oklahoma":{"abbr":"OK","notes":"Both drivers can share blame regardless of fault.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","firms":[{"id":"ok1","name":"Lowe Law Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"OK","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"Oregon":{"abbr":"OR","notes":"Both drivers can share blame regardless of fault.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","firms":[{"id":"or1","name":"Lowe Law Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"OR","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"Pennsylvania":{"abbr":"PA","notes":"Client cannot be more than 51% at fault.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","firms":[{"id":"pa1","name":"Kwartler Manus","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"Philadelphia + Delaware, Montgomery, Chester, Bucks counties; Pittsburgh metro","requirements":"Philly area or Pittsburgh metro ONLY. MUST have 2 people in the car.","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"Philly/Pittsburgh ONLY. MUST have 2 people in car. No minors unless catastrophic."}]},"South Carolina":{"abbr":"SC","notes":"Client cannot be more than 51% at fault.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","firms":[{"id":"sc1","name":"Woron and Dhillon Firm (W&D)","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"$2,000","minors":"No minors unless catastrophic","geographic":"SC — Allendale, Orangeburg, Hampton, Jasper, Williamsburg preferred","requirements":"$2K min PD. Liberal venue counties: Allendale, Orangeburg, Hampton, Jasper, Williamsburg.","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"$2K min PD. Liberal venues preferred. No minors unless catastrophic."}]},"South Dakota":{"abbr":"SD","notes":"Both drivers can share blame regardless of fault.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","firms":[{"id":"sd1","name":"Lowe Law Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"SD","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"Tennessee":{"abbr":"TN","notes":"Client cannot be more than 50% at fault.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","firms":[{"id":"tn1","name":"Spartan Law Firm","accepting":true,"priority":"High","marketing":"TrueCare Marketing","minPD":"","minors":"16 Years Old","geographic":"NC, GA, IL, OH, TN","requirements":"","exclusions":"","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"Also covers NC, GA, IL, OH."}]},"Texas":{"abbr":"TX","notes":"Client cannot be more than 51% at fault. TX tends to have high case values.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","firms":[{"id":"tx1","name":"Edward Law Group","accepting":true,"priority":"High","minors":"No minors unless catastrophic","marketing":"Belief Marketing","minPD":"$3,500","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","geographic":"TX","requirements":"Min $3,500 for PD.","exclusions":"No minors unless catastrophic","contact":"","notes":""},{"id":"tx2","name":"KRW Lawyers","accepting":true,"priority":"Medium","minors":"No minors unless catastrophic","marketing":"Belief Marketing","minPD":"","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","geographic":"TX, NM","requirements":"","exclusions":"No minors unless catastrophic","contact":"","notes":""},{"id":"tx3","name":"Anderson Law","accepting":true,"priority":"High","minors":"16 Years Old","marketing":"Belief Marketing","minPD":"Over $1,000","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","geographic":"Dallas/FTW (50mi), Austin (30mi)","requirements":"PD over $1,000. Dallas/FTW 50mi or Austin 30mi only.","exclusions":"","contact":"","notes":""},{"id":"tx4","name":"Turnbull","accepting":true,"priority":"Medium","minors":"16 Years Old","marketing":"Belief Marketing","minPD":"","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","geographic":"AL, GA, TX","requirements":"","exclusions":"","contact":"","notes":""}]},"Utah":{"abbr":"UT","notes":"Client cannot be more than 50% at fault.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","firms":[{"id":"ut1","name":"Lowe Law Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"UT","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"Virginia":{"abbr":"VA","notes":"Client cannot be more than 50% at fault.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","firms":[{"id":"f1776705244590lot","name":"Whitlock Law","accepting":true,"priority":"High","minors":"16 Years Old","marketing":"Belief Marketing","minPD":"","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","geographic":"Satewide","requirements":"","exclusions":"","contact":"","notes":""}]},"Washington":{"abbr":"WA","notes":"Both drivers can share blame regardless of fault.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","firms":[{"id":"wa1","name":"Bernard Law","accepting":true,"priority":"High","minors":"16 Years Old","marketing":"Belief Marketing","minPD":"","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","geographic":"WA","requirements":"Anyone under 12 does NOT need a signed agreement — attorney handles directly with guardian.","exclusions":"No minors unless catastrophic","contact":"","notes":""},{"id":"wa2","name":"Herschensohn Law Firm (ZBH)","accepting":true,"priority":"High","minors":"16 Years Old","marketing":"Belief Marketing","minPD":"","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","geographic":"WA","requirements":"Last 4 of SSN required on agreement. Full SSN required to proceed.","exclusions":"No minors unless catastrophic","contact":"","notes":""}]},"Wisconsin":{"abbr":"WI","notes":"Both drivers can share blame regardless of fault.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","firms":[{"id":"wi1","name":"Lowe Law Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"WI","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]},"Wyoming":{"abbr":"WY","notes":"Both drivers can share blame regardless of fault.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","firms":[{"id":"wy1","name":"Lowe Law Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"No minors unless catastrophic","geographic":"WY","requirements":"","exclusions":"No minors unless catastrophic","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"No minors unless catastrophic."}]}};
+
 const ABBR_MAP={AK:"Alaska",AL:"Alabama",AR:"Arkansas",AZ:"Arizona",CA:"California",CO:"Colorado",GA:"Georgia",IA:"Iowa",ID:"Idaho",IL:"Illinois",KS:"Kansas",KY:"Kentucky",LA:"Louisiana",MD:"Maryland",MI:"Michigan",MN:"Minnesota",MO:"Missouri",MS:"Mississippi",MT:"Montana",NC:"North Carolina",ND:"North Dakota",NE:"Nebraska",NJ:"New Jersey",NM:"New Mexico",NV:"Nevada",OH:"Ohio",OK:"Oklahoma",OR:"Oregon",PA:"Pennsylvania",SC:"South Carolina",SD:"South Dakota",TN:"Tennessee",TX:"Texas",UT:"Utah",VA:"Virginia",WA:"Washington",WI:"Wisconsin",WY:"Wyoming"};
- 
+
 const STORAGE_KEY="pi_intake_v5";
 let appData=JSON.parse(JSON.stringify(DEFAULT_DATA)),adminUnlocked=false,search="",curState=null,editDraft=null,stateDraft=null,modalMode=null,searchMode="state";
- 
+
 function loadData(){return JSON.parse(JSON.stringify(DEFAULT_DATA));}
 function saveData(){/* data lives in memory — use Export to persist changes */
   const p=document.getElementById("exportBtn");if(p)p.classList.add("visible");}
 function uid(){return"f"+Date.now()+Math.random().toString(36).slice(2,5);}
 function updateCounter(){const el=document.getElementById("counterDisplay");if(el){const nS=Object.keys(appData).length,nF=Object.values(appData).reduce((a,s)=>a+s.firms.length,0);el.textContent=nS+" states · "+nF+" firms";}}
- 
+
 function exportFile(){
   // Serialize current appData back into the HTML file as the new DEFAULT_DATA
   const dataStr=JSON.stringify(appData,null,0);
@@ -248,105 +260,58 @@ function exportFile(){
 function pb(p){if(p==="High")return'<span class="badge b-green">High priority</span>';if(p==="Medium")return'<span class="badge b-blue">Medium priority</span>';return'<span class="badge b-gray">'+p+"</span>";}
 function ab(a){return a?'<span class="badge b-green">Accepting</span>':'<span class="badge b-red">Closed</span>';}
 function mb(m){if(!m)return"";if(m.toLowerCase().includes("catastrophic"))return'<span class="badge b-red">No minors</span>';if(m.includes("16"))return'<span class="badge b-amber">16+ only</span>';return"";}
- 
+
 const SLACK_WEBHOOK="https://hooks.slack.com/services/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";
 let flagPending={sk:null,id:null};
- 
 function openFlagModal(sk,id){
   flagPending={sk,id};
   const f=appData[sk].firms.find(x=>x.id===id);
   const existing=f&&f.flagNote?f.flagNote:"";
-  const el=document.getElementById("flagModalRoot");
-  if(!el)return;
-  el.innerHTML=`<div class="flag-modal-bg" id="flagBg" onclick="if(event.target.id==='flagBg')closeFlagModal()">
-    <div class="flag-modal">
-      <h3>Flag for Review</h3>
-      <p><strong>${f?f.name:""}</strong> &mdash; ${sk}</p>
-      <textarea id="flagNoteInput" placeholder="Describe the issue so the admin team knows what to update...">${existing}</textarea>
-      <div class="slack-status" id="slackStatus"></div>
-      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;">
-        <button class="btn" onclick="closeFlagModal()">Cancel</button>
-        <button class="btn btn-green" id="flagSubmitBtn" onclick="submitFlag()">Submit &amp; Notify Slack</button>
-      </div>
-    </div>
-  </div>`;
+  const el=document.getElementById("flagModalRoot");if(!el)return;
+  el.innerHTML=`<div class="flag-modal-bg" id="flagBg" onclick="if(event.target.id==='flagBg')closeFlagModal()"><div class="flag-modal"><h3>Flag for Review</h3><p><strong>${f?f.name:""}</strong> &mdash; ${sk}</p><textarea id="flagNoteInput" placeholder="Describe the issue so the admin team knows what to update...">${existing}</textarea><div class="slack-status" id="slackStatus"></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;"><button class="btn" onclick="closeFlagModal()">Cancel</button><button class="btn btn-green" id="flagSubmitBtn" onclick="submitFlag()">Submit &amp; Notify Slack</button></div></div></div>`;
   setTimeout(()=>{const t=document.getElementById("flagNoteInput");if(t)t.focus();},30);
 }
- 
-function closeFlagModal(){
-  const el=document.getElementById("flagModalRoot");
-  if(el)el.innerHTML="";
-  flagPending={sk:null,id:null};
-}
- 
+function closeFlagModal(){const el=document.getElementById("flagModalRoot");if(el)el.innerHTML="";flagPending={sk:null,id:null};}
 async function submitFlag(){
   const noteEl=document.getElementById("flagNoteInput");
   const note=(noteEl?noteEl.value:"").trim();
   if(!note){if(noteEl){noteEl.style.borderColor="#e05050";noteEl.focus();}return;}
   const {sk,id}=flagPending;
-  const f=appData[sk].firms.find(x=>x.id===id);
-  if(!f)return;
+  const f=appData[sk].firms.find(x=>x.id===id);if(!f)return;
   const flaggedDate=new Date().toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
-  f.flagged=true;f.flagNote=note;f.flaggedDate=flaggedDate;
-  saveData();
+  f.flagged=true;f.flagNote=note;f.flaggedDate=flaggedDate;saveData();
   const statusEl=document.getElementById("slackStatus");
   const submitBtn=document.getElementById("flagSubmitBtn");
   if(statusEl){statusEl.className="slack-status sending";statusEl.textContent="Sending to Slack...";}
   if(submitBtn)submitBtn.disabled=true;
-  const payload={
-    blocks:[
-      {type:"header",text:{type:"plain_text",text:"Firm Flagged for Review",emoji:true}},
-      {type:"section",fields:[
-        {type:"mrkdwn",text:"*Firm:*\n"+f.name},
-        {type:"mrkdwn",text:"*State:*\n"+sk}
-      ]},
-      {type:"section",fields:[
-        {type:"mrkdwn",text:"*Date Flagged:*\n"+flaggedDate},
-        {type:"mrkdwn",text:"*Priority:*\n"+(f.priority||"Unknown")}
-      ]},
-      {type:"section",text:{type:"mrkdwn",text:"*Rep Note:*\n"+note}},
-      {type:"context",elements:[{type:"mrkdwn",text:"Needs admin review in ClientBridge - State & Firm Lookup"}]}
-    ]
-  };
+  const payload={blocks:[
+    {type:"header",text:{type:"plain_text",text:"Firm Flagged for Review",emoji:true}},
+    {type:"section",fields:[{type:"mrkdwn",text:"*Firm:*\n"+f.name},{type:"mrkdwn",text:"*State:*\n"+sk}]},
+    {type:"section",fields:[{type:"mrkdwn",text:"*Date Flagged:*\n"+flaggedDate},{type:"mrkdwn",text:"*Priority:*\n"+(f.priority||"Unknown")}]},
+    {type:"section",text:{type:"mrkdwn",text:"*Rep Note:*\n"+note}},
+    {type:"context",elements:[{type:"mrkdwn",text:"Needs admin review in ClientBridge - State & Firm Lookup"}]}
+  ]};
   try{
-    // Use no-cors mode — Slack webhooks support this; we won't get a response body but the message sends
-    await fetch(SLACK_WEBHOOK,{
-      method:"POST",
-      mode:"no-cors",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify(payload)
-    });
+    await fetch(SLACK_WEBHOOK,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:"payload="+encodeURIComponent(JSON.stringify(payload))});
     if(statusEl){statusEl.className="slack-status sent";statusEl.textContent="Slack notification sent to #lookup-tool-alerts";}
     setTimeout(()=>{closeFlagModal();fullRender();},1500);
   }catch(err){
-    if(statusEl){statusEl.className="slack-status error";statusEl.textContent="Slack send failed ("+err.message+") - flag saved locally.";}
+    if(statusEl){statusEl.className="slack-status error";statusEl.textContent="Slack send failed - flag saved locally.";}
     if(submitBtn)submitBtn.disabled=false;
     setTimeout(()=>{closeFlagModal();fullRender();},3000);
   }
 }
- 
-function unflagFirm(sk,id){
-  const f=appData[sk].firms.find(x=>x.id===id);
-  if(!f)return;
-  f.flagged=false;delete f.flagNote;delete f.flaggedDate;
-  saveData();fullRender();
-}
- 
+function unflagFirm(sk,id){const f=appData[sk].firms.find(x=>x.id===id);if(!f)return;f.flagged=false;delete f.flagNote;delete f.flaggedDate;saveData();fullRender();}
 function speakFirm(btn,text){
   window.speechSynthesis.cancel();
-  const utt=new SpeechSynthesisUtterance(text);
-  utt.rate=0.92;utt.pitch=1;
-  btn.classList.add("speaking");
-  utt.onend=()=>btn.classList.remove("speaking");
-  utt.onerror=()=>btn.classList.remove("speaking");
+  const utt=new SpeechSynthesisUtterance(text);utt.rate=0.92;utt.pitch=1;
+  btn.classList.add("speaking");utt.onend=()=>btn.classList.remove("speaking");utt.onerror=()=>btn.classList.remove("speaking");
   window.speechSynthesis.speak(utt);
 }
 function toggleCard(id){
-  const body=document.getElementById("cb_"+id);
-  const btn=document.getElementById("cc_"+id);
-  if(!body||!btn)return;
-  const isCollapsed=body.classList.contains("collapsed");
-  if(isCollapsed){body.style.maxHeight=body.scrollHeight+"px";body.classList.remove("collapsed");btn.classList.remove("collapsed");}
+  const body=document.getElementById("cb_"+id),btn=document.getElementById("cc_"+id);if(!body||!btn)return;
+  const collapsed=body.classList.contains("collapsed");
+  if(collapsed){body.style.maxHeight=body.scrollHeight+"px";body.classList.remove("collapsed");btn.classList.remove("collapsed");}
   else{body.style.maxHeight=body.scrollHeight+"px";requestAnimationFrame(()=>{body.style.maxHeight="0px";body.classList.add("collapsed");btn.classList.add("collapsed");});}
 }
 function firmCard(f,sk){
@@ -354,41 +319,19 @@ function firmCard(f,sk){
   const rows=[[f.minPD,"Min. property damage"],[f.trtNoTrt,"No treatment window"],[f.trtWithTrt,"With treatment window"],[f.geographic,"Geographic coverage"],[f.requirements,"Requirements"],[f.exclusions,"Exclusions"],[f.marketing,"Intake Source"],[f.contact,"Contact / link"]].filter(r=>r[0]);
   const contactVal=(v,l)=>{if(l!=="Contact / link")return`<div class="req-val">${v}</div>`;const isUrl=/^https?:\/\//i.test(v)||/^www\./i.test(v);const href=v.startsWith("http")?v:"https://"+v;return isUrl?`<div class="req-val"><a href="${href}" target="_blank" rel="noopener" style="color:#2a6098;text-decoration:underline;">${v}</a></div>`:`<div class="req-val">${v}</div>`;};
   const speakText=f.pronunciation||f.name;
-  const speakBtn=`<button class="speak-btn" title="Hear pronunciation" onclick="speakFirm(this,'${speakText.replace(/'/g,"\\'")}')">\uD83D\uDD0A</button>`;
-  const flagBtn=f.flagged
-    ?`<button class="flag-btn flagged" onclick="unflagFirm('${sk}','${f.id}')">Flagged</button>`
-    :`<button class="flag-btn" onclick="openFlagModal('${sk}','${f.id}')">Flag</button>`;
+  const speakBtn=`<button class="speak-btn" title="Hear pronunciation" onclick="speakFirm(this,'${speakText.replace(/'/g,"\'")}')">&#128266;</button>`;
+  const flagBtn=f.flagged?`<button class="flag-btn flagged" onclick="unflagFirm('${sk}','${f.id}')">Flagged</button>`:`<button class="flag-btn" onclick="openFlagModal('${sk}','${f.id}')">Flag</button>`;
   const updatedLine=f.lastUpdated?`<div class="firm-updated">Last updated: ${f.lastUpdated}</div>`:"";
   const flagNote=f.flagged?`<div class="rep-note" style="background:#fff8e0;border-color:#e6c84a;color:#7a5000;margin-top:6px;"><strong>Flagged for review</strong>${f.flaggedDate?" - "+f.flaggedDate:""}<br><em>${f.flagNote||""}</em></div>`:"";
   const cardId=f.id.replace(/[^a-z0-9]/gi,"_");
-  return`<div class="firm-card${f.accepting?"":" closed"}">
-    <div class="firm-card-header" onclick="toggleCard('${cardId}')">
-      <div style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:0;">
-        <div class="firm-name">${f.name}${speakBtn}</div>
-        ${updatedLine}
-      </div>
-      <div class="badges" style="align-items:center;">
-        ${pb(f.priority)}${ab(f.accepting)}${mb(f.minors)}
-        ${flagBtn}
-        <button class="collapse-btn" id="cc_${cardId}" onclick="event.stopPropagation();toggleCard('${cardId}')">&#9662;</button>
-        ${adminBtns}
-      </div>
-    </div>
-    <div class="firm-card-body" id="cb_${cardId}" style="max-height:1000px;">
-      <div style="margin-top:10px;">
-        <div class="req-grid">${rows.map(([v,l])=>`<div class="req"><div class="req-lbl">${l}</div>${contactVal(v,l)}</div>`).join("")}</div>
-        ${f.notes?`<div class="rep-note"><strong>Rep note:</strong> ${f.notes}</div>`:""}
-        ${flagNote}
-      </div>
-    </div>
-  </div>`;
+  return`<div class="firm-card${f.accepting?"":" closed"}"><div class="firm-card-header" onclick="toggleCard('${cardId}')"><div style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:0;"><div class="firm-name">${f.name}${speakBtn}</div>${updatedLine}</div><div class="badges" style="align-items:center;">${pb(f.priority)}${ab(f.accepting)}${mb(f.minors)}${flagBtn}<button class="collapse-btn" id="cc_${cardId}" onclick="event.stopPropagation();toggleCard('${cardId}')">&#9662;</button>${adminBtns}</div></div><div class="firm-card-body" id="cb_${cardId}" style="max-height:1000px;"><div style="margin-top:10px;"><div class="req-grid">${rows.map(([v,l])=>`<div class="req"><div class="req-lbl">${l}</div>${contactVal(v,l)}</div>`).join("")}</div>${f.notes?`<div class="rep-note"><strong>Rep note:</strong> ${f.notes}</div>`:""}${flagNote}</div></div></div>`;
 }
- 
+
 function stateMapEmbed(stateName){
   const q=encodeURIComponent(stateName+", USA");
   return`<div class="state-map-wrap"><iframe src="https://maps.google.com/maps?q=${q}&z=5&output=embed" loading="lazy" title="${stateName} map"></iframe></div>`;
 }
- 
+
 function renderList(){
   const sorted=Object.keys(appData).sort();
   const q=search.toLowerCase();
@@ -413,37 +356,22 @@ function renderDetail(key){
   if(!key)return`<div class="empty-state"><div class="empty-icon">◈</div><div class="empty-title">Select a state</div><div class="empty-sub">Click any state on the left to view firms and requirements</div></div>`;
   const s=appData[key],active=s.firms.filter(f=>f.accepting),closed=s.firms.filter(f=>!f.accepting);
   const adminBtns=adminUnlocked?`<div class="right-admin-bar"><button class="btn btn-sm" onclick="openEditState('${key}')">Edit state</button><button class="btn btn-sm btn-blue" onclick="openAddFirm('${key}')">+ Add firm</button></div>`:"";
+    const fields5=[
+    {key:"faultType",label:"Fault Type",cls:""},
+    {key:"keyThreshold",label:"Key Threshold",cls:""},
+    {key:"signWhen",label:"Sign the Lead When",cls:" sign"},
+    {key:"doNotSign",label:"Do Not Sign When",cls:" nosign"},
+    {key:"disqualifiers",label:"State-Specific Disqualifiers",cls:" disq"}
+  ];
   let infoHtml;
   if(adminUnlocked){
-    infoHtml=`<div class="state-info-grid">
-      <div class="state-info-block">
-        <div class="sib-label">When can someone file a claim against the other driver?</div>
-        <textarea id="inlineClaim" placeholder="Enter claim filing rules…">${s.claimFiling||""}</textarea>
-        <div class="sib-save-row"><span>Admin edit</span><button class="btn btn-sm btn-green" onclick="saveInlineField('${key}','claimFiling','inlineClaim')">Save</button></div>
-      </div>
-      <div class="state-info-block">
-        <div class="sib-label">Fault Type</div>
-        <textarea id="inlineFault" placeholder="Enter fault type details…">${s.faultType||""}</textarea>
-        <div class="sib-save-row"><span>Admin edit</span><button class="btn btn-sm btn-green" onclick="saveInlineField('${key}','faultType','inlineFault')">Save</button></div>
-      </div>
-    </div>`;
+    infoHtml=`<div class="state-fields">${fields5.map(f=>`<div class="sf-block${f.cls}"><div class="sf-label">${f.label}</div><textarea id="sf_${f.key}" placeholder="${f.label}...">${s[f.key]||""}</textarea><div class="sib-save-row"><span>Admin edit</span><button class="btn btn-sm btn-green" onclick="saveInlineField('${key}','${f.key}','sf_${f.key}')">Save</button></div></div>`).join("")}</div>`;
   } else {
-    const claimVal=s.claimFiling?`<div class="sib-value">${s.claimFiling}</div>`:`<div class="sib-value empty">Not set</div>`;
-    const faultVal=s.faultType?`<div class="sib-value">${s.faultType}</div>`:`<div class="sib-value empty">Not set</div>`;
-    infoHtml=`<div class="state-info-grid">
-      <div class="state-info-block">
-        <div class="sib-label">When can someone file a claim against the other driver?</div>
-        ${claimVal}
-      </div>
-      <div class="state-info-block">
-        <div class="sib-label">Fault Type</div>
-        ${faultVal}
-      </div>
-    </div>`;
+    infoHtml=`<div class="state-fields">${fields5.map(f=>`<div class="sf-block${f.cls}"><div class="sf-label">${f.label}</div>${s[f.key]?`<div class="sf-value">${s[f.key]}</div>`:`<div class="sf-value empty">Not set</div>`}</div>`).join("")}</div>`;
   }
   return`<div class="state-header"><span class="sname">${key} (${s.abbr})</span></div>${stateMapEmbed(key)}${infoHtml}${adminBtns}${active.length?`<div class="sec-title">Accepting leads</div>`+active.map(f=>firmCard(f,key)).join(""):""} ${closed.length?`<div class="sec-title">Not currently accepting</div>`+closed.map(f=>firmCard(f,key)).join(""):""} ${!active.length&&!closed.length?`<div class="no-result" style="margin-top:24px;">No firms assigned yet.</div>`:""}`;
 }
- 
+
 function buildModal(){
   if(!modalMode)return"";
   if(modalMode==="pw")return`<div class="overlay" id="ov" onclick="if(event.target.id==='ov')closeModal()"><div class="modal"><h2>Admin login</h2><div class="field"><label>Password</label><input type="password" id="pwf" placeholder="Enter password" onkeydown="if(event.key==='Enter')submitPw()"/></div><div class="err" id="pwerr"></div><div class="modal-footer"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-green" onclick="submitPw()">Unlock</button></div></div></div>`;
@@ -452,11 +380,11 @@ function buildModal(){
     const fields=[["name","Firm name","text"],["pronunciation","Pronunciation (phonetic)","text"],["minPD","Min. property damage","text"],["trtNoTrt","No treatment window","text"],["trtWithTrt","With treatment window","text"],["geographic","Geographic coverage","text"],["requirements","Requirements","textarea"],["exclusions","Exclusions","text"],["marketing","Intake Source","text"],["contact","Contact / link","text"],["notes","Rep note","textarea"]];
     return`<div class="overlay" id="ov" onclick="if(event.target.id==='ov')closeModal()"><div class="modal"><h2>${d._new?"Add firm":"Edit firm"}</h2><div class="two-col"><div class="field"><label>Status</label><select id="ef_a"><option value="true" ${d.accepting!==false?"selected":""}>Accepting</option><option value="false" ${d.accepting===false?"selected":""}>Not accepting</option></select></div><div class="field"><label>Priority</label><select id="ef_p">${["High","Medium","Paused"].map(p=>`<option ${d.priority===p?"selected":""}>${p}</option>`).join("")}</select></div></div><div class="field"><label>Minor policy</label><select id="ef_m"><option value="No minors unless catastrophic" ${(d.minors||"")==="No minors unless catastrophic"?"selected":""}>No minors unless catastrophic</option><option value="16 Years Old" ${(d.minors||"")==="16 Years Old"?"selected":""}>16 Years Old</option><option value="" ${!d.minors?"selected":""}>No restriction</option></select></div>${fields.map(([k,l,t])=>`<div class="field"><label>${l}</label>${t==="textarea"?`<textarea id="ef_${k}">${d[k]||""}</textarea>`:`<input type="text" id="ef_${k}" value="${(d[k]||"").replace(/"/g,"&quot;")}"/>`}</div>`).join("")}<div class="modal-footer"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-green" onclick="saveFirmEdit()">Save</button></div></div></div>`;
   }
-  if(modalMode==="state"&&stateDraft)return`<div class="overlay" id="ov" onclick="if(event.target.id==='ov')closeModal()"><div class="modal"><h2>Edit state</h2><div class="two-col"><div class="field"><label>State name</label><input type="text" id="es_n" value="${stateDraft.key}"/></div><div class="field"><label>Abbreviation</label><input type="text" id="es_a" value="${stateDraft.abbr}"/></div></div><div class="field"><label>When can someone file a claim against the other driver?</label><textarea id="es_cf">${stateDraft.claimFiling||""}</textarea></div><div class="field"><label>Fault Type</label><textarea id="es_ft">${stateDraft.faultType||""}</textarea></div><div class="modal-footer"><button class="btn btn-red" onclick="deleteState('${stateDraft.key}')">Delete state</button><button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-green" onclick="saveStateEdit('${stateDraft.key}')">Save</button></div></div></div>`;
+  if(modalMode==="state"&&stateDraft)return`<div class="overlay" id="ov" onclick="if(event.target.id==='ov')closeModal()"><div class="modal"><h2>Edit state</h2><div class="two-col"><div class="field"><label>State name</label><input type="text" id="es_n" value="${stateDraft.key}"/></div><div class="field"><label>Abbreviation</label><input type="text" id="es_a" value="${stateDraft.abbr}"/></div></div><div class="field"><label>Fault Type</label><textarea id="es_faultType">${stateDraft.faultType||""}</textarea></div><div class="field"><label>Key Threshold</label><textarea id="es_keyThreshold">${stateDraft.keyThreshold||""}</textarea></div><div class="field"><label>Sign the Lead When</label><textarea id="es_signWhen">${stateDraft.signWhen||""}</textarea></div><div class="field"><label>Do Not Sign When</label><textarea id="es_doNotSign">${stateDraft.doNotSign||""}</textarea></div><div class="field"><label>State-Specific Disqualifiers</label><textarea id="es_disqualifiers">${stateDraft.disqualifiers||""}</textarea></div><div class="modal-footer"><button class="btn btn-red" onclick="deleteState('${stateDraft.key}')">Delete state</button><button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-green" onclick="saveStateEdit('${stateDraft.key}')">Save</button></div></div></div>`;
   if(modalMode==="addstate")return`<div class="overlay" id="ov" onclick="if(event.target.id==='ov')closeModal()"><div class="modal"><h2>Add new state</h2><div class="two-col"><div class="field"><label>State name</label><input type="text" id="as_n" placeholder="e.g. Michigan"/></div><div class="field"><label>Abbreviation</label><input type="text" id="as_a" placeholder="e.g. MI"/></div></div><div class="field"><label>When can someone file a claim against the other driver?</label><textarea id="as_cf" placeholder="Claim filing rules…"></textarea></div><div class="field"><label>Fault Type</label><textarea id="as_ft" placeholder="e.g. Comparative fault, contributory negligence…"></textarea></div><div class="modal-footer"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-green" onclick="addState()">Add state</button></div></div></div>`;
   return"";
 }
- 
+
 function fullRender(){
   const listEl=document.getElementById("stateList");
   const detailEl=document.getElementById("detailPanel");
@@ -466,7 +394,7 @@ function fullRender(){
   updateCounter();
   if(modalMode==="pw")setTimeout(()=>{const f=document.getElementById("pwf");if(f)f.focus();},30);
 }
- 
+
 function handleSearch(v){search=v;fullRender();}
 function setSearchMode(m){searchMode=m;search="";const inp=document.getElementById("searchInput");if(inp){inp.value="";inp.placeholder=m==="firm"?"Search firms...":"Search states...";}fullRender();}
 function viewState(s){curState=s;fullRender();}
@@ -477,15 +405,15 @@ function lockAdmin(){adminUnlocked=false;document.getElementById("adminBar").cla
 function openEditFirm(sk,id){editDraft=Object.assign({_sk:sk},JSON.parse(JSON.stringify(appData[sk].firms.find(f=>f.id===id))));modalMode="firm";fullRender();}
 function saveFirmEdit(){const sk=editDraft._sk,firms=appData[sk].firms,idx=firms.findIndex(f=>f.id===editDraft.id);const u={id:editDraft.id,name:document.getElementById("ef_name").value,pronunciation:document.getElementById("ef_pronunciation").value,lastUpdated:new Date().toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}),accepting:document.getElementById("ef_a").value==="true",priority:document.getElementById("ef_p").value,minors:document.getElementById("ef_m").value,marketing:document.getElementById("ef_marketing").value,minPD:document.getElementById("ef_minPD").value,trtNoTrt:document.getElementById("ef_trtNoTrt").value,trtWithTrt:document.getElementById("ef_trtWithTrt").value,geographic:document.getElementById("ef_geographic").value,requirements:document.getElementById("ef_requirements").value,exclusions:document.getElementById("ef_exclusions").value,contact:document.getElementById("ef_contact").value,notes:document.getElementById("ef_notes").value};if(idx>-1)firms[idx]=u;else firms.push(u);saveData();closeModal();}
 function deleteFirm(sk,id){if(!confirm("Remove this firm?"))return;appData[sk].firms=appData[sk].firms.filter(f=>f.id!==id);saveData();fullRender();}
-function openEditState(key){stateDraft={key,abbr:appData[key].abbr,notes:appData[key].notes,claimFiling:appData[key].claimFiling||"",faultType:appData[key].faultType||""};modalMode="state";fullRender();}
-function saveStateEdit(oldKey){const nk=(document.getElementById("es_n").value||oldKey).trim();if(nk!==oldKey){appData[nk]=appData[oldKey];delete appData[oldKey];}appData[nk].abbr=document.getElementById("es_a").value;appData[nk].claimFiling=document.getElementById("es_cf").value;appData[nk].faultType=document.getElementById("es_ft").value;if(curState===oldKey)curState=nk;saveData();closeModal();}
+function openEditState(key){const s=appData[key];stateDraft={key,abbr:s.abbr,notes:s.notes,faultType:s.faultType||'',keyThreshold:s.keyThreshold||'',signWhen:s.signWhen||'',doNotSign:s.doNotSign||'',disqualifiers:s.disqualifiers||''};modalMode='state';fullRender();}
+function saveStateEdit(oldKey){const nk=(document.getElementById('es_n').value||oldKey).trim();if(nk!==oldKey){appData[nk]=appData[oldKey];delete appData[oldKey];}const d=appData[nk];d.abbr=document.getElementById('es_a').value;d.faultType=document.getElementById('es_faultType').value;d.keyThreshold=document.getElementById('es_keyThreshold').value;d.signWhen=document.getElementById('es_signWhen').value;d.doNotSign=document.getElementById('es_doNotSign').value;d.disqualifiers=document.getElementById('es_disqualifiers').value;if(curState===oldKey)curState=nk;saveData();closeModal();}
 function deleteState(key){if(!confirm("Delete "+key+"?"))return;delete appData[key];curState=null;saveData();closeModal();}
 function openAddState(){modalMode="addstate";fullRender();}
-function addState(){const k=(document.getElementById("as_n").value||"").trim();if(!k)return;appData[k]={abbr:document.getElementById("as_a").value||"",notes:"",claimFiling:document.getElementById("as_cf").value||"",faultType:document.getElementById("as_ft").value||"",firms:[]};curState=k;saveData();closeModal();}
+function addState(){const k=(document.getElementById("as_n").value||"").trim();if(!k)return;appData[k]={abbr:document.getElementById("as_a").value||"",notes:"",faultType:"",keyThreshold:"",signWhen:"",doNotSign:"",disqualifiers:"",firms:[]};curState=k;saveData();closeModal();}
 function saveInlineNotes(key){const el=document.getElementById("inlineNotes");if(el){appData[key].notes=el.value;saveData();fullRender();}}
 function saveInlineField(key,field,elId){const el=document.getElementById(elId);if(el){appData[key][field]=el.value;saveData();fullRender();}}
 function openAddFirm(sk){editDraft={id:uid(),_sk:sk,_new:true,name:"",pronunciation:"",accepting:true,priority:"High",minors:"No minors unless catastrophic",marketing:"Belief Marketing",minPD:"",trtNoTrt:TRT.noTrt,trtWithTrt:TRT.withTrt,geographic:"",requirements:"",exclusions:"",contact:"",notes:""};modalMode="firm";fullRender();}
- 
+
 // ── Resizer drag logic ──
 (function(){
   const resizer=document.getElementById("resizer");
@@ -508,10 +436,10 @@ function openAddFirm(sk){editDraft={id:uid(),_sk:sk,_new:true,name:"",pronunciat
     document.body.style.cursor="";document.body.style.userSelect="";
   });
 })();
- 
+
 fullRender();
 </script>
- 
- 
- 
+
+
+
 <scribe-shadow id="crxjs-ext" data-crx="okfkdaglfjjjfefdcppliegebpoegaii" style="position: fixed; width: 0px; height: 0px; top: 0px; left: 0px; z-index: 2147483647; overflow: visible; visibility: visible;"></scribe-shadow><div></div><div id="give-freely-root-mbnbehikldjhnfehhnaidhjhoofhpehk" class="give-freely-root" data-extension-id="mbnbehikldjhnfehhnaidhjhoofhpehk" data-extension-name="CSS Peeper" style="display: block;"></div></body></html>

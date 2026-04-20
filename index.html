@@ -119,6 +119,32 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .speak-btn:hover{opacity:1;}
 .speak-btn.speaking{opacity:1;animation:pulse 0.8s infinite;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+.firm-card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;cursor:pointer;user-select:none;}
+.firm-card-body{overflow:hidden;transition:max-height 0.25s ease,opacity 0.2s ease;}
+.firm-card-body.collapsed{max-height:0!important;opacity:0;pointer-events:none;}
+.collapse-btn{background:none;border:none;cursor:pointer;font-size:13px;color:#aaa;padding:0 2px;line-height:1;transition:transform 0.2s;}
+.collapse-btn.collapsed{transform:rotate(-90deg);}
+.flag-btn{background:none;border:none;cursor:pointer;font-size:13px;padding:2px 7px;border-radius:4px;color:#888;border:1px solid #d0d0c8;transition:all 0.15s;white-space:nowrap;}
+.flag-btn:hover{background:#fff3cd;border-color:#e6c84a;color:#7a5000;}
+.flag-btn.flagged{background:#fff3cd;border-color:#e6c84a;color:#7a5000;font-weight:600;}
+.firm-updated{font-size:11px;color:#bbb;margin-top:5px;font-style:italic;}
+.search-tabs{display:flex;gap:4px;margin-bottom:8px;}
+.search-tab{font-size:12px;padding:3px 10px;border-radius:5px;border:1px solid #d0d0c8;background:#e8e8e2;color:#888;cursor:pointer;transition:all 0.12s;}
+.search-tab.active{background:#daeeff;border-color:#98c0e8;color:#1a4878;font-weight:600;}
+.firm-result-row{padding:8px 11px;background:#f0f0ec;border:1px solid #d8d8d2;border-radius:6px;margin-bottom:3px;cursor:pointer;transition:all 0.1s;}
+.firm-result-row:hover{background:#e8e8e2;border-color:#c8c8c0;}
+.frr-name{font-size:14px;color:#2a2a2a;font-weight:500;}
+.frr-state{font-size:12px;color:#aaa;margin-top:1px;}
+.flag-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;}
+.flag-modal{background:#f0f0ec;border-radius:12px;border:1px solid #c8c8c0;width:100%;max-width:440px;padding:22px;box-shadow:0 8px 32px rgba(0,0,0,0.15);}
+.flag-modal h3{font-size:16px;font-weight:600;margin-bottom:6px;color:#1a1a1a;}
+.flag-modal p{font-size:13px;color:#888;margin-bottom:14px;}
+.flag-modal textarea{width:100%;font-size:14px;padding:9px 11px;border:1px solid #c8c8c0;border-radius:6px;background:#e8e8e2;color:#1a1a1a;outline:none;resize:vertical;min-height:80px;line-height:1.5;font-family:inherit;}
+.flag-modal textarea:focus{border-color:#e6c84a;box-shadow:0 0 0 2px rgba(230,200,74,0.15);background:#f8f4e0;}
+.slack-status{font-size:12px;margin-top:8px;padding:6px 10px;border-radius:5px;display:none;}
+.slack-status.sending{display:block;background:#e8f0fe;color:#1a4878;border:1px solid #98c0e8;}
+.slack-status.sent{display:block;background:#d8f0e2;color:#1a6838;border:1px solid #98d8b0;}
+.slack-status.error{display:block;background:#f8e0e0;color:#a02828;border:1px solid #e0a0a0;}
  
 /* ── Modal ── */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px;}
@@ -181,6 +207,7 @@ Clear fault cases work best</textarea>
     </div><div class="right-admin-bar"><button class="btn btn-sm" onclick="openEditState('Alabama')">Edit state</button><button class="btn btn-sm btn-blue" onclick="openAddFirm('Alabama')">+ Add firm</button></div><div class="sec-title">Accepting leads</div><div class="firm-card"><div class="firm-top"><div class="firm-name">Turnbull</div><div class="badges"><span class="badge b-green">High priority</span><span class="badge b-green">Accepting</span><span class="badge b-amber">16+ only</span><div style="display:flex;gap:5px;margin-left:auto;"><button class="btn btn-sm btn-blue" onclick="openEditFirm('Alabama','al1')">Edit</button><button class="btn btn-sm btn-red" onclick="deleteFirm('Alabama','al1')">Remove</button></div></div></div><div class="req-grid"><div class="req"><div class="req-lbl">No treatment window</div><div class="req-val">Under 1 month with no treatment</div></div><div class="req"><div class="req-lbl">With treatment window</div><div class="req-val">31-90 days with treatment</div></div><div class="req"><div class="req-lbl">Geographic coverage</div><div class="req-val">AL, GA, TX</div></div><div class="req"><div class="req-lbl">Intake Source</div><div class="req-val">Belief Marketing</div></div></div><div class="rep-note"><strong>Rep note:</strong> Also covers GA and TX.</div></div>  </div>
   </div>
 </div>
+<div id="flagModalRoot"></div>
 <div id="modalRoot"></div>
  
 <script>
@@ -222,6 +249,89 @@ function pb(p){if(p==="High")return'<span class="badge b-green">High priority</s
 function ab(a){return a?'<span class="badge b-green">Accepting</span>':'<span class="badge b-red">Closed</span>';}
 function mb(m){if(!m)return"";if(m.toLowerCase().includes("catastrophic"))return'<span class="badge b-red">No minors</span>';if(m.includes("16"))return'<span class="badge b-amber">16+ only</span>';return"";}
  
+const SLACK_WEBHOOK="https://hooks.slack.com/services/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";
+let flagPending={sk:null,id:null};
+ 
+function openFlagModal(sk,id){
+  flagPending={sk,id};
+  const f=appData[sk].firms.find(x=>x.id===id);
+  const existing=f&&f.flagNote?f.flagNote:"";
+  const el=document.getElementById("flagModalRoot");
+  if(!el)return;
+  el.innerHTML=`<div class="flag-modal-bg" id="flagBg" onclick="if(event.target.id==='flagBg')closeFlagModal()">
+    <div class="flag-modal">
+      <h3>Flag for Review</h3>
+      <p><strong>${f?f.name:""}</strong> &mdash; ${sk}</p>
+      <textarea id="flagNoteInput" placeholder="Describe the issue so the admin team knows what to update...">${existing}</textarea>
+      <div class="slack-status" id="slackStatus"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;">
+        <button class="btn" onclick="closeFlagModal()">Cancel</button>
+        <button class="btn btn-green" id="flagSubmitBtn" onclick="submitFlag()">Submit &amp; Notify Slack</button>
+      </div>
+    </div>
+  </div>`;
+  setTimeout(()=>{const t=document.getElementById("flagNoteInput");if(t)t.focus();},30);
+}
+ 
+function closeFlagModal(){
+  const el=document.getElementById("flagModalRoot");
+  if(el)el.innerHTML="";
+  flagPending={sk:null,id:null};
+}
+ 
+async function submitFlag(){
+  const noteEl=document.getElementById("flagNoteInput");
+  const note=(noteEl?noteEl.value:"").trim();
+  if(!note){if(noteEl){noteEl.style.borderColor="#e05050";noteEl.focus();}return;}
+  const {sk,id}=flagPending;
+  const f=appData[sk].firms.find(x=>x.id===id);
+  if(!f)return;
+  const flaggedDate=new Date().toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
+  f.flagged=true;f.flagNote=note;f.flaggedDate=flaggedDate;
+  saveData();
+  const statusEl=document.getElementById("slackStatus");
+  const submitBtn=document.getElementById("flagSubmitBtn");
+  if(statusEl){statusEl.className="slack-status sending";statusEl.textContent="Sending to Slack...";}
+  if(submitBtn)submitBtn.disabled=true;
+  const payload={
+    blocks:[
+      {type:"header",text:{type:"plain_text",text:"Firm Flagged for Review",emoji:true}},
+      {type:"section",fields:[
+        {type:"mrkdwn",text:"*Firm:*\n"+f.name},
+        {type:"mrkdwn",text:"*State:*\n"+sk}
+      ]},
+      {type:"section",fields:[
+        {type:"mrkdwn",text:"*Date Flagged:*\n"+flaggedDate},
+        {type:"mrkdwn",text:"*Priority:*\n"+(f.priority||"Unknown")}
+      ]},
+      {type:"section",text:{type:"mrkdwn",text:"*Rep Note:*\n"+note}},
+      {type:"context",elements:[{type:"mrkdwn",text:"Needs admin review in ClientBridge - State & Firm Lookup"}]}
+    ]
+  };
+  try{
+    // Use no-cors mode — Slack webhooks support this; we won't get a response body but the message sends
+    await fetch(SLACK_WEBHOOK,{
+      method:"POST",
+      mode:"no-cors",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(payload)
+    });
+    if(statusEl){statusEl.className="slack-status sent";statusEl.textContent="Slack notification sent to #lookup-tool-alerts";}
+    setTimeout(()=>{closeFlagModal();fullRender();},1500);
+  }catch(err){
+    if(statusEl){statusEl.className="slack-status error";statusEl.textContent="Slack send failed ("+err.message+") - flag saved locally.";}
+    if(submitBtn)submitBtn.disabled=false;
+    setTimeout(()=>{closeFlagModal();fullRender();},3000);
+  }
+}
+ 
+function unflagFirm(sk,id){
+  const f=appData[sk].firms.find(x=>x.id===id);
+  if(!f)return;
+  f.flagged=false;delete f.flagNote;delete f.flaggedDate;
+  saveData();fullRender();
+}
+ 
 function speakFirm(btn,text){
   window.speechSynthesis.cancel();
   const utt=new SpeechSynthesisUtterance(text);
@@ -231,13 +341,47 @@ function speakFirm(btn,text){
   utt.onerror=()=>btn.classList.remove("speaking");
   window.speechSynthesis.speak(utt);
 }
+function toggleCard(id){
+  const body=document.getElementById("cb_"+id);
+  const btn=document.getElementById("cc_"+id);
+  if(!body||!btn)return;
+  const isCollapsed=body.classList.contains("collapsed");
+  if(isCollapsed){body.style.maxHeight=body.scrollHeight+"px";body.classList.remove("collapsed");btn.classList.remove("collapsed");}
+  else{body.style.maxHeight=body.scrollHeight+"px";requestAnimationFrame(()=>{body.style.maxHeight="0px";body.classList.add("collapsed");btn.classList.add("collapsed");});}
+}
 function firmCard(f,sk){
   const adminBtns=adminUnlocked?`<div style="display:flex;gap:5px;margin-left:auto;"><button class="btn btn-sm btn-blue" onclick="openEditFirm('${sk}','${f.id}')">Edit</button><button class="btn btn-sm btn-red" onclick="deleteFirm('${sk}','${f.id}')">Remove</button></div>`:"";
   const rows=[[f.minPD,"Min. property damage"],[f.trtNoTrt,"No treatment window"],[f.trtWithTrt,"With treatment window"],[f.geographic,"Geographic coverage"],[f.requirements,"Requirements"],[f.exclusions,"Exclusions"],[f.marketing,"Intake Source"],[f.contact,"Contact / link"]].filter(r=>r[0]);
   const contactVal=(v,l)=>{if(l!=="Contact / link")return`<div class="req-val">${v}</div>`;const isUrl=/^https?:\/\//i.test(v)||/^www\./i.test(v);const href=v.startsWith("http")?v:"https://"+v;return isUrl?`<div class="req-val"><a href="${href}" target="_blank" rel="noopener" style="color:#2a6098;text-decoration:underline;">${v}</a></div>`:`<div class="req-val">${v}</div>`;};
   const speakText=f.pronunciation||f.name;
-  const speakBtn=`<button class="speak-btn" title="Hear pronunciation" onclick="speakFirm(this,'${speakText.replace(/'/g,"\'")}')">🔊</button>`;
-  return`<div class="firm-card${f.accepting?"":" closed"}"><div class="firm-top"><div class="firm-name">${f.name}${speakBtn}</div><div class="badges">${pb(f.priority)}${ab(f.accepting)}${mb(f.minors)}${adminBtns}</div></div><div class="req-grid">${rows.map(([v,l])=>`<div class="req"><div class="req-lbl">${l}</div>${contactVal(v,l)}</div>`).join("")}</div>${f.notes?`<div class="rep-note"><strong>Rep note:</strong> ${f.notes}</div>`:""}</div>`;
+  const speakBtn=`<button class="speak-btn" title="Hear pronunciation" onclick="speakFirm(this,'${speakText.replace(/'/g,"\\'")}')">\uD83D\uDD0A</button>`;
+  const flagBtn=f.flagged
+    ?`<button class="flag-btn flagged" onclick="unflagFirm('${sk}','${f.id}')">Flagged</button>`
+    :`<button class="flag-btn" onclick="openFlagModal('${sk}','${f.id}')">Flag</button>`;
+  const updatedLine=f.lastUpdated?`<div class="firm-updated">Last updated: ${f.lastUpdated}</div>`:"";
+  const flagNote=f.flagged?`<div class="rep-note" style="background:#fff8e0;border-color:#e6c84a;color:#7a5000;margin-top:6px;"><strong>Flagged for review</strong>${f.flaggedDate?" - "+f.flaggedDate:""}<br><em>${f.flagNote||""}</em></div>`:"";
+  const cardId=f.id.replace(/[^a-z0-9]/gi,"_");
+  return`<div class="firm-card${f.accepting?"":" closed"}">
+    <div class="firm-card-header" onclick="toggleCard('${cardId}')">
+      <div style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:0;">
+        <div class="firm-name">${f.name}${speakBtn}</div>
+        ${updatedLine}
+      </div>
+      <div class="badges" style="align-items:center;">
+        ${pb(f.priority)}${ab(f.accepting)}${mb(f.minors)}
+        ${flagBtn}
+        <button class="collapse-btn" id="cc_${cardId}" onclick="event.stopPropagation();toggleCard('${cardId}')">&#9662;</button>
+        ${adminBtns}
+      </div>
+    </div>
+    <div class="firm-card-body" id="cb_${cardId}" style="max-height:1000px;">
+      <div style="margin-top:10px;">
+        <div class="req-grid">${rows.map(([v,l])=>`<div class="req"><div class="req-lbl">${l}</div>${contactVal(v,l)}</div>`).join("")}</div>
+        ${f.notes?`<div class="rep-note"><strong>Rep note:</strong> ${f.notes}</div>`:""}
+        ${flagNote}
+      </div>
+    </div>
+  </div>`;
 }
  
 function stateMapEmbed(stateName){
@@ -248,17 +392,23 @@ function stateMapEmbed(stateName){
 function renderList(){
   const sorted=Object.keys(appData).sort();
   const q=search.toLowerCase();
+  const tabs=`<div class="search-tabs"><button class="search-tab${searchMode==="state"?" active":""}" onclick="setSearchMode('state')">States</button><button class="search-tab${searchMode==="firm"?" active":""}" onclick="setSearchMode('firm')">Firms</button></div>`;
+  if(searchMode==="firm"){
+    if(!q)return tabs+`<div class="no-result" style="padding:12px 0">Type to search firms...</div>`;
+    const results=[];
+    sorted.forEach(s=>{appData[s].firms.forEach(f=>{if(f.name.toLowerCase().includes(q))results.push({s,f});});});
+    if(!results.length)return tabs+`<div class="no-result">No firms match</div>`;
+    return tabs+`<p class="hint">${results.length} firm${results.length!==1?"s":""}</p>`+results.map(({s,f})=>`<div class="firm-result-row" onclick="viewState('${s}')"><div class="frr-name">${f.name}</div><div class="frr-state">${s}</div></div>`).join("");
+  }
   const filtered=q?sorted.filter(s=>s.toLowerCase().includes(q)||appData[s].abbr.toLowerCase()===q):sorted;
-  if(!filtered.length)return`<div class="no-result">No states match</div>`;
+  if(!filtered.length)return tabs+`<div class="no-result">No states match</div>`;
   const rows=filtered.map(s=>{
-    const fc=appData[s].firms.filter(f=>f.accepting).length;
     const activeClass=curState===s?" active-state":"";
-    return`<div class="state-row${activeClass}" onclick="viewState('${s}')"><div class="sr-left"><span class="sr-abbr">${appData[s].abbr}</span><span class="sr-name">${s}</span></div><div class="sr-right"><span class="sr-arrow">›</span></div></div>`;
+    return`<div class="state-row${activeClass}" onclick="viewState('${s}')"><div class="sr-left"><span class="sr-abbr">${appData[s].abbr}</span><span class="sr-name">${s}</span></div><div class="sr-right"><span class="sr-arrow">&#x203a;</span></div></div>`;
   }).join("");
   const addBtn=adminUnlocked?`<div style="margin-top:10px;"><button class="btn btn-blue btn-sm" onclick="openAddState()">+ Add state</button></div>`:"";
-  return`<p class="hint">${filtered.length} states</p>${rows}${addBtn}`;
+  return tabs+`<p class="hint">${filtered.length} states</p>${rows}${addBtn}`;
 }
- 
 function renderDetail(key){
   if(!key)return`<div class="empty-state"><div class="empty-icon">◈</div><div class="empty-title">Select a state</div><div class="empty-sub">Click any state on the left to view firms and requirements</div></div>`;
   const s=appData[key],active=s.firms.filter(f=>f.accepting),closed=s.firms.filter(f=>!f.accepting);
@@ -318,13 +468,14 @@ function fullRender(){
 }
  
 function handleSearch(v){search=v;fullRender();}
+function setSearchMode(m){searchMode=m;search="";const inp=document.getElementById("searchInput");if(inp){inp.value="";inp.placeholder=m==="firm"?"Search firms...":"Search states...";}fullRender();}
 function viewState(s){curState=s;fullRender();}
 function openAdminPw(){modalMode="pw";fullRender();}
 function closeModal(){modalMode=null;editDraft=null;stateDraft=null;fullRender();}
 function submitPw(){const p=document.getElementById("pwf").value;if(p==="intake2024"){adminUnlocked=true;modalMode=null;document.getElementById("adminBar").className="abar unlocked";document.getElementById("adminLabel").textContent="Admin mode";document.getElementById("adminBtns").innerHTML=`<button class="btn btn-sm btn-red" onclick="lockAdmin()">Lock</button>`;document.getElementById("exportBtn").classList.add("visible");fullRender();}else{document.getElementById("pwerr").textContent="Incorrect password.";}}
 function lockAdmin(){adminUnlocked=false;document.getElementById("adminBar").className="abar locked";document.getElementById("adminLabel").textContent="Rep mode";document.getElementById("adminBtns").innerHTML=`<button class="btn btn-sm" onclick="openAdminPw()">Admin login</button>`;document.getElementById("exportBtn").classList.remove("visible");fullRender();}
 function openEditFirm(sk,id){editDraft=Object.assign({_sk:sk},JSON.parse(JSON.stringify(appData[sk].firms.find(f=>f.id===id))));modalMode="firm";fullRender();}
-function saveFirmEdit(){const sk=editDraft._sk,firms=appData[sk].firms,idx=firms.findIndex(f=>f.id===editDraft.id);const u={id:editDraft.id,name:document.getElementById("ef_name").value,pronunciation:document.getElementById("ef_pronunciation").value,accepting:document.getElementById("ef_a").value==="true",priority:document.getElementById("ef_p").value,minors:document.getElementById("ef_m").value,marketing:document.getElementById("ef_marketing").value,minPD:document.getElementById("ef_minPD").value,trtNoTrt:document.getElementById("ef_trtNoTrt").value,trtWithTrt:document.getElementById("ef_trtWithTrt").value,geographic:document.getElementById("ef_geographic").value,requirements:document.getElementById("ef_requirements").value,exclusions:document.getElementById("ef_exclusions").value,contact:document.getElementById("ef_contact").value,notes:document.getElementById("ef_notes").value};if(idx>-1)firms[idx]=u;else firms.push(u);saveData();closeModal();}
+function saveFirmEdit(){const sk=editDraft._sk,firms=appData[sk].firms,idx=firms.findIndex(f=>f.id===editDraft.id);const u={id:editDraft.id,name:document.getElementById("ef_name").value,pronunciation:document.getElementById("ef_pronunciation").value,lastUpdated:new Date().toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}),accepting:document.getElementById("ef_a").value==="true",priority:document.getElementById("ef_p").value,minors:document.getElementById("ef_m").value,marketing:document.getElementById("ef_marketing").value,minPD:document.getElementById("ef_minPD").value,trtNoTrt:document.getElementById("ef_trtNoTrt").value,trtWithTrt:document.getElementById("ef_trtWithTrt").value,geographic:document.getElementById("ef_geographic").value,requirements:document.getElementById("ef_requirements").value,exclusions:document.getElementById("ef_exclusions").value,contact:document.getElementById("ef_contact").value,notes:document.getElementById("ef_notes").value};if(idx>-1)firms[idx]=u;else firms.push(u);saveData();closeModal();}
 function deleteFirm(sk,id){if(!confirm("Remove this firm?"))return;appData[sk].firms=appData[sk].firms.filter(f=>f.id!==id);saveData();fullRender();}
 function openEditState(key){stateDraft={key,abbr:appData[key].abbr,notes:appData[key].notes,claimFiling:appData[key].claimFiling||"",faultType:appData[key].faultType||""};modalMode="state";fullRender();}
 function saveStateEdit(oldKey){const nk=(document.getElementById("es_n").value||oldKey).trim();if(nk!==oldKey){appData[nk]=appData[oldKey];delete appData[oldKey];}appData[nk].abbr=document.getElementById("es_a").value;appData[nk].claimFiling=document.getElementById("es_cf").value;appData[nk].faultType=document.getElementById("es_ft").value;if(curState===oldKey)curState=nk;saveData();closeModal();}

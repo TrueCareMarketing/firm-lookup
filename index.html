@@ -1,284 +1,121 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Intake — State &amp; Firm Lookup</title>
-<style>
-*{box-sizing:border-box;margin:0;padding:0;}
-html,body{height:100%;overflow:hidden;}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#eef0f4;color:#2c3540;}
-.header{background:#ffffff;border-bottom:1px solid #d8dde5;padding:11px 24px;display:flex;align-items:center;justify-content:space-between;height:46px;}
-.header-logo{font-size:15px;font-weight:600;color:#2c3540;letter-spacing:0.01em;}
-.header-logo span{color:#3a8f62;margin-right:5px;}
-.header-right{display:flex;align-items:center;gap:12px;}
-.counter{font-size:13px;color:#7a8fa0;letter-spacing:0.02em;}
-.export-btn{font-size:13px;padding:4px 11px;border-radius:5px;background:#3d5a78;color:#ffffff;border:1px solid #4a6a88;cursor:pointer;font-weight:600;display:none;transition:background 0.15s;}
-.export-btn:hover{background:#4a6a8a;}
-.export-btn.visible{display:inline-block;}
-.app{display:flex;height:calc(100vh - 46px);overflow:hidden;}
-.panel-left{width:280px;min-width:180px;max-width:480px;background:#f5f7fa;border-right:1px solid #d8dde5;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;}
-.resizer{width:5px;background:transparent;cursor:col-resize;flex-shrink:0;position:relative;z-index:10;}
-.resizer:hover,.resizer.dragging{background:#c8d0da;}
-.panel-right{flex:1;overflow-y:auto;background:#eef0f4;min-width:0;}
-.panel-right-inner{padding:28px 32px;max-width:860px;}
-.left-top{padding:12px 12px 0;flex-shrink:0;}
-.left-list{flex:1;overflow-y:auto;padding:0 12px 12px;}
-.left-list::-webkit-scrollbar{width:3px;}
-.left-list::-webkit-scrollbar-track{background:transparent;}
-.left-list::-webkit-scrollbar-thumb{background:#c0cad4;border-radius:3px;}
-.abar{border-radius:6px;padding:7px 10px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:5px;font-size:13px;}
-.abar.locked{background:#eceef2;border:1px solid #cdd4dc;}
-.abar.unlocked{background:#e8f5ee;border:1px solid #a8d8bc;}
-.abar .lbl{font-weight:500;color:#6a8090;}
-.abar.unlocked .lbl{color:#2e7a52;}
-.mode-toggle{display:flex;border-radius:7px;overflow:hidden;border:1px solid #cdd4dc;margin-bottom:8px;background:#eceef2;}
-.mode-btn{flex:1;font-size:12px;font-weight:600;padding:6px 0;border:none;cursor:pointer;transition:all 0.15s;letter-spacing:0.03em;color:#7a8fa0;background:transparent;}
-.mode-btn.active{background:#ffffff;color:#2c3540;box-shadow:0 1px 3px rgba(0,0,0,0.1);}
-.mode-btn:not(.active):hover{background:#e0e4ea;color:#3a4a58;}
-.search-wrap{margin-bottom:10px;position:relative;}
-.search-wrap input{width:100%;font-size:14px;padding:8px 11px 8px 30px;border:1px solid #cdd4dc;border-radius:6px;background:#ffffff;color:#2c3540;outline:none;transition:border 0.15s;}
-.search-wrap input:focus{border-color:#3a8f62;background:#ffffff;box-shadow:0 0 0 2px rgba(58,143,98,0.12);}
-.search-wrap input::placeholder{color:#9aaab8;}
-.search-icon{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:#9aaab8;font-size:14px;pointer-events:none;}
-.firm-result-group{margin-bottom:16px;}
-.firm-result-state-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:#5a7080;background:#eceef2;border:1px solid #cdd4dc;border-radius:5px;padding:4px 9px;margin-bottom:6px;display:inline-block;cursor:pointer;}
-.firm-result-state-label:hover{background:#d8dde5;color:#2c3540;}
-.firm-result-empty{font-size:14px;color:#9aaab8;padding:24px 0;text-align:center;}
-.firm-name-row{position:relative;display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:#ffffff;border:1px solid #cdd4dc;border-radius:7px;margin-bottom:3px;cursor:pointer;transition:all 0.15s;}
-.firm-name-row:hover{background:#f0f4f8;border-color:#8aaac0;}
-.firm-name-row .fnr-name{font-size:14px;font-weight:600;color:#2c3540;}
-.firm-name-row .fnr-count{font-size:11px;color:#9aaab8;white-space:nowrap;margin-left:8px;}
-.firm-name-row .fnr-tooltip{display:none;position:absolute;left:0;top:calc(100% + 5px);z-index:50;background:#2c3540;color:#e8ecf0;border-radius:8px;padding:10px 13px;min-width:200px;max-width:300px;box-shadow:0 4px 18px rgba(0,0,0,0.18);pointer-events:none;}
-.firm-name-row:hover .fnr-tooltip{display:block;}
-.fnr-tooltip .tt-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#9aaab8;margin-bottom:7px;}
-.fnr-tooltip .tt-state{display:flex;align-items:center;gap:7px;padding:3px 0;border-bottom:1px solid #3a4a58;}
-.fnr-tooltip .tt-state:last-child{border-bottom:none;}
-.fnr-tooltip .tt-abbr{font-size:11px;font-weight:700;color:#7ab0d8;min-width:24px;}
-.fnr-tooltip .tt-sname{font-size:12px;color:#c8d8e8;}
-.fnr-tooltip .tt-badges{display:flex;gap:4px;margin-left:auto;}
-.fnr-tooltip .tt-badge{font-size:10px;font-weight:600;padding:1px 5px;border-radius:3px;}
-.fnr-tooltip .tt-badge.open{background:#1e3d2a;color:#6db890;}
-.fnr-tooltip .tt-badge.closed{background:#3d1e1e;color:#e08080;}
-.fnr-tooltip .tt-state.clickable{cursor:pointer;border-radius:4px;padding:5px 6px;}
-.fnr-tooltip .tt-state.clickable:hover{background:#3a4a58;}
-
-.hint{font-size:12px;color:#9aaab8;margin-bottom:8px;letter-spacing:0.02em;}
-.state-row{display:flex;align-items:center;justify-content:space-between;padding:9px 11px;background:#ffffff;border:1px solid #cdd4dc;border-radius:6px;margin-bottom:3px;cursor:pointer;transition:all 0.1s;}
-.state-row:hover{background:#f0f3f7;border-color:#b0bcc8;}
-.state-row.active-state{background:#e8f0f8;border-color:#5a90c0;box-shadow:0 0 0 1px #5a90c0;}
-.sr-left{display:flex;align-items:center;gap:9px;}
-.sr-abbr{font-size:12px;font-weight:700;color:#5a7a90;min-width:24px;letter-spacing:0.04em;}
-.sr-name{font-size:14px;color:#3a4a58;font-weight:400;}
-.sr-right{display:flex;align-items:center;gap:5px;}
-.sr-arrow{color:#9aaab8;font-size:13px;}
-.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:calc(100vh - 100px);color:#9aaab8;text-align:center;padding:40px;}
-.empty-icon{font-size:32px;margin-bottom:14px;opacity:0.4;}
-.empty-title{font-size:16px;color:#7a8fa0;font-weight:500;margin-bottom:5px;}
-.empty-sub{font-size:14px;color:#9aaab8;}
-.state-map-wrap{width:100%;max-width:360px;margin:0 auto 20px;border-radius:10px;overflow:hidden;border:1px solid #cdd4dc;background:#f5f7fa;}
-.state-map-wrap iframe{display:block;width:100%;height:200px;border:none;}
-.state-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
-.sname{font-size:24px;font-weight:600;color:#2c3540;}
-.state-info-grid{display:flex;flex-direction:column;gap:10px;margin-bottom:20px;}
-.state-info-block{background:#ffffff;border:1px solid #cdd4dc;border-radius:8px;padding:12px 14px;}
-.state-info-block .sib-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#5a8090;margin-bottom:6px;}
-.state-info-block .sib-value{font-size:14px;color:#3a4a58;line-height:1.65;white-space:pre-wrap;}
-.state-info-block .sib-value.empty{color:#b0bcc8;font-style:italic;}
-.state-info-block textarea{width:100%;font-size:14px;color:#2c3540;background:#f5f7fa;border:1px solid #3a8f62;border-radius:6px;padding:8px 11px;line-height:1.6;resize:vertical;min-height:65px;outline:none;font-family:inherit;}
-.state-info-block textarea:focus{box-shadow:0 0 0 2px rgba(58,143,98,0.15);}
-.sib-save-row{display:flex;gap:6px;justify-content:flex-end;margin-top:6px;}
-.sib-save-row span{font-size:11px;color:#9aaab8;align-self:center;}
-.sec-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:#5a8090;margin:18px 0 9px;display:flex;align-items:center;gap:8px;}
-.sec-title::after{content:'';flex:1;height:1px;background:#cdd4dc;}
-.right-admin-bar{display:flex;align-items:center;gap:8px;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid #cdd4dc;}
-.firm-card{background:#ffffff;border:1px solid #cdd4dc;border-radius:9px;margin-bottom:8px;transition:border-color 0.2s;}
-.firm-card:hover{border-color:#8aaac0;}
-.firm-card.closed{opacity:0.5;}
-.firm-card-header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 16px;cursor:default;user-select:none;}
-.firm-header-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0;}
-.firm-collapse-icon{font-size:11px;color:#9aaab8;transition:transform 0.2s;flex-shrink:0;width:14px;text-align:center;}
-.firm-card:hover .firm-collapse-icon{transform:rotate(90deg);color:#5a7a90;}
-.firm-name{font-size:15px;font-weight:600;color:#2c3540;line-height:1.3;}
-.firm-updated{font-size:11px;color:#9aaab8;margin-top:1px;letter-spacing:0.02em;}
-.firm-card-body{display:none;padding:0 16px 14px;border-top:1px solid #e0e5ec;}
-.firm-card:hover .firm-card-body{display:block;}
-.firm-section{border-top:1px solid #e8ecf0;margin-top:9px;padding-top:9px;}
-.firm-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#5a8090;margin-bottom:5px;}
-.firm-section-val{font-size:13px;color:#3a4a58;line-height:1.6;white-space:pre-wrap;}
-.firm-section-val.empty{color:#b0bcc8;font-style:italic;}
-.badges{display:flex;gap:4px;flex-wrap:wrap;align-items:center;flex-shrink:0;}
-.badge{font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px;white-space:nowrap;letter-spacing:0.02em;}
-.b-green{background:#e6f5ee;color:#2e7a52;border:1px solid #a8d8bc;}
-.b-red{background:#fdecea;color:#c0392b;border:1px solid #f0b0aa;}
-.b-blue{background:#e8f0f8;color:#2a5f90;border:1px solid #a8c8e8;}
-.b-amber{background:#fef6e6;color:#9a6010;border:1px solid #f0d090;}
-.b-gray{background:#eceef2;color:#5a7080;border:1px solid #cdd4dc;}
-.req-grid{display:flex;flex-direction:column;gap:0;margin-bottom:9px;border:1px solid #cdd4dc;border-radius:6px;overflow:hidden;}
-.req{display:flex;align-items:baseline;gap:10px;padding:7px 13px;border-bottom:1px solid #e0e5ec;background:#ffffff;}
-.req:last-child{border-bottom:none;}
-.req:nth-child(even){background:#f8f9fb;}
-.req-lbl{font-size:12px;font-weight:600;color:#5a7a90;min-width:160px;flex-shrink:0;letter-spacing:0.02em;}
-.req-val{font-size:14px;color:#3a4a58;line-height:1.5;}
-.rep-note{background:#fffbea;border:1px solid #e8d898;border-radius:6px;padding:9px 12px;font-size:14px;color:#7a5e10;line-height:1.65;border-left:3px solid #c8a030;margin-top:9px;}
-.rep-note strong{font-weight:700;color:#5a4408;}
-.btn{font-size:13px;padding:5px 11px;border-radius:6px;border:1px solid #cdd4dc;background:#eceef2;color:#3a4a58;cursor:pointer;transition:all 0.12s;font-weight:500;}
-.btn:hover{background:#d8dde5;color:#2c3540;}
-.btn-green{background:#e6f5ee;color:#2e7a52;border-color:#a8d8bc;}
-.btn-green:hover{background:#d0ecde;}
-.btn-red{background:#fdecea;color:#c0392b;border-color:#f0b0aa;}
-.btn-red:hover{background:#fad8d5;}
-.btn-blue{background:#e8f0f8;color:#2a5f90;border-color:#a8c8e8;}
-.btn-blue:hover{background:#d5e5f5;}
-.btn-sm{font-size:12px;padding:3px 8px;}
-.no-result{font-size:14px;color:#9aaab8;padding:20px 0;text-align:center;}
-.speak-btn{background:none;border:none;cursor:pointer;font-size:15px;padding:0 3px;opacity:0.5;transition:opacity 0.15s;line-height:1;vertical-align:middle;margin-left:5px;}
-.speak-btn:hover{opacity:0.9;}
-.speak-btn.speaking{opacity:1;animation:pulse 0.8s infinite;}
-@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px;}
-.modal{background:#ffffff;border-radius:12px;border:1px solid #cdd4dc;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;padding:24px;box-shadow:0 8px 40px rgba(0,0,0,0.15);}
-.modal h2{font-size:18px;font-weight:600;margin-bottom:20px;color:#2c3540;}
-.field{margin-bottom:12px;}
-.field label{display:block;font-size:12px;font-weight:700;color:#5a8090;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.06em;}
-.field input,.field textarea,.field select{width:100%;font-size:14px;padding:8px 11px;border:1px solid #cdd4dc;border-radius:6px;background:#f5f7fa;color:#2c3540;outline:none;}
-.field input:focus,.field textarea:focus,.field select:focus{border-color:#3a8f62;box-shadow:0 0 0 2px rgba(58,143,98,0.12);background:#ffffff;}
-.field textarea{resize:vertical;min-height:70px;line-height:1.5;}
-.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;padding-top:14px;border-top:1px solid #cdd4dc;}
-.err{font-size:13px;color:#c0392b;margin-top:5px;text-align:center;}
-small.helper{display:block;margin-top:4px;color:#7a8fa0;font-size:12px}
-</style>
-</head>
-<body>
-<div class="header">
-  <div class="header-logo">ClientBridge — State & Firm Lookup</div>
-  <div class="header-right">
-    <span class="counter" id="counterDisplay">0 states</span>
-    <button class="export-btn" id="exportBtn" onclick="saveData()">Save changes</button>
-  </div>
-</div>
-<div class="app">
-  <div class="panel-left" id="panelLeft">
-    <div class="left-top">
-      <div class="abar locked" id="adminBar">
-        <span class="lbl" id="adminLabel">Rep mode</span>
-        <div id="adminBtns"><button class="btn btn-sm" onclick="openAdminPw()">Admin login</button></div>
-      </div>
-      <div class="mode-toggle">
-        <button class="mode-btn active" id="modeStateBtn" onclick="setSearchMode('state')">States</button>
-        <button class="mode-btn" id="modeFirmBtn" onclick="setSearchMode('firm')">Law Firms</button>
-      </div>
-      <div class="search-wrap">
-        <span class="search-icon">⌕</span>
-        <input type="text" id="searchInput" placeholder="Search states…" oninput="handleSearch(this.value)" autocomplete="off">
-      </div>
-    </div>
-    <div class="left-list" id="stateList"></div>
-  </div>
-  <div class="resizer" id="resizer"></div>
-  <div class="panel-right" id="panelRight">
-    <div class="panel-right-inner" id="detailPanel"></div>
-  </div>
-</div>
-<div id="modalRoot"></div>
-
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import {
-    getAuth,
-    signInWithEmailAndPassword,
-    onAuthStateChanged,
-    signOut
-  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-  import {
-    getDatabase,
-    ref,
-    get,
-    set,
-    onValue
-  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyAuQTCrixjg1lDkFZaRjx0lmCmDqt6hyps",
-    authDomain: "law-firm-look-up-tool.firebaseapp.com",
-    databaseURL: "https://law-firm-look-up-tool-default-rtdb.firebaseio.com",
-    projectId: "law-firm-look-up-tool",
-    storageBucket: "law-firm-look-up-tool.firebasestorage.app",
-    messagingSenderId: "911807679189",
-    appId: "1:911807679189:web:e8ca317ea766684804705c"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getDatabase(app);
-
-  window.firebaseAuth = auth;
-  window.firebaseDb = db;
-  window.firebaseFns = {
-    signInWithEmailAndPassword,
-    onAuthStateChanged,
-    signOut,
-    ref,
-    get,
-    set,
-    onValue
-  };
-
-  window.dispatchEvent(new Event("firebase-ready"));
-</script>
-
 <script>
-const TRT={noTrt:"Under 1 month with no treatment",withTrt:"31-90 days with treatment"};
-function LOWE(id,geo){return{id,name:"Lowe Law Firm",pronunciation:"LOH Law Firm",accepting:true,priority:"High",marketing:"Belief Marketing",minPD:"",minors:"16 Years Old",geographic:geo,requirements:"",exclusions:"16 Years Old",trtNoTrt:TRT.noTrt,trtWithTrt:TRT.withTrt,contact:"",notes:"",faultType:"",keyThreshold:"",signWhen:"",doNotSign:"",disqualifiers:"",lastUpdated:""};}
+let appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+let adminUnlocked = false;
+let search = "";
+let curState = null;
+let editDraft = null;
+let stateDraft = null;
+let modalMode = null;
+let searchMode = "state";
+let suppressRealtime = false;
 
-const DEFAULT_DATA={"Alabama":{"abbr":"AL","notes":"Very tough — client is barred if even 1% at fault.","stateFaultType":"","stateKeyThreshold":"","stateSignWhen":"","stateDoNotSign":"","stateDisqualifiers":"","firms":[{"id":"al1","name":"Turnbull","pronunciation":"TURN-bull","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"16 Years Old","geographic":"AL, GA, TX","requirements":"","exclusions":"","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"Also covers GA and TX.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","lastUpdated":""}]},"Alaska":{"abbr":"AK","notes":"Both drivers can share blame regardless of fault.","stateFaultType":"","stateKeyThreshold":"","stateSignWhen":"","stateDoNotSign":"","stateDisqualifiers":"","firms":[LOWE("ak1","AK")]},"Arizona":{"abbr":"AZ","notes":"Both drivers can share blame regardless of fault.","stateFaultType":"","stateKeyThreshold":"","stateSignWhen":"","stateDoNotSign":"","stateDisqualifiers":"","firms":[{"id":"az1","name":"Theut Scaringelli & Kupiszewski (TSK)","pronunciation":"THOYT Skah-rin-JEL-ee and Koo-pih-SHEV-ski","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"16 Years Old","geographic":"AZ","requirements":"","exclusions":"16 Years Old","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","lastUpdated":""}]},"Arkansas":{"abbr":"AR","notes":"Both drivers can share blame regardless of fault.","stateFaultType":"","stateKeyThreshold":"","stateSignWhen":"","stateDoNotSign":"","stateDisqualifiers":"","firms":[LOWE("ar1","AR")]},"California":{"abbr":"CA","notes":"Both drivers can share blame regardless of fault. CA cases tend to have high value.","stateFaultType":"","stateKeyThreshold":"","stateSignWhen":"","stateDoNotSign":"","stateDisqualifiers":"","firms":[{"id":"ca1","name":"M&Y Personal Injury Lawyers","pronunciation":"M and Y Personal Injury Lawyers","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"16 Years Old","geographic":"CA","requirements":"","exclusions":"16 Years Old","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","lastUpdated":""},{"id":"ca2","name":"Larry H. Parker (LHP)","pronunciation":"Larry H. Parker","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"16 Years Old","geographic":"CA","requirements":"","exclusions":"16 Years Old","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","lastUpdated":""},LOWE("ca3","CA")]},"Colorado":{"abbr":"CO","notes":"Client cannot be more than 50% at fault.","stateFaultType":"","stateKeyThreshold":"","stateSignWhen":"","stateDoNotSign":"","stateDisqualifiers":"","firms":[{"id":"co1","name":"Levine Law","pronunciation":"leh-VINE Law","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"16 Years Old","geographic":"CO","requirements":"","exclusions":"16 Years Old","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","lastUpdated":""},LOWE("co2","CO")]},"Georgia":{"abbr":"GA","notes":"Client cannot be more than 50% at fault. High rate of uninsured drivers.","stateFaultType":"","stateKeyThreshold":"","stateSignWhen":"","stateDoNotSign":"","stateDisqualifiers":"","firms":[{"id":"ga1","name":"Edward Law Group","pronunciation":"ED-werd Law Group","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"$3,500","minors":"16 Years Old","geographic":"GA","requirements":"Minimum $3,500 for PD.","exclusions":"16 Years Old","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"Min $3,500 for PD. ","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","lastUpdated":""},{"id":"ga2","name":"The Injury Law","pronunciation":"The Injury Law","accepting":true,"priority":"High","marketing":"TrueCare Marketing","minPD":"Moderate to Totaled","minors":"16 Years Old","geographic":"Metro Atlanta (up to 2 hrs), Savannah, Brunswick","requirements":"Hospital or urgent care visit within 4 weeks. They handle PD for clients.","exclusions":"","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"Metro Atlanta up to 2 hrs out. Savannah & Brunswick OK. Must treat within 4 weeks.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","lastUpdated":""},{"id":"ga3","name":"Turnbull","pronunciation":"TURN-bull","accepting":true,"priority":"Medium","marketing":"Belief Marketing","minPD":"","minors":"16 Years Old","geographic":"AL, GA, TX","requirements":"","exclusions":"","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"Also covers AL and TX.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","lastUpdated":""}]},"Idaho":{"abbr":"ID","notes":"Client cannot be more than 50% at fault.","stateFaultType":"","stateKeyThreshold":"","stateSignWhen":"","stateDoNotSign":"","stateDisqualifiers":"","firms":[LOWE("id1","ID")]},"Illinois":{"abbr":"IL","notes":"Client cannot be more than 51% at fault.","stateFaultType":"","stateKeyThreshold":"","stateSignWhen":"","stateDoNotSign":"","stateDisqualifiers":"","firms":[{"id":"il1","name":"Spartan Law Firm","pronunciation":"SPAR-ten Law Firm","accepting":true,"priority":"High","marketing":"TrueCare Marketing","minPD":"","minors":"16 Years Old","geographic":"NC, GA, IL, OH, TN","requirements":"","exclusions":"","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"Also covers NC, GA, OH, TN.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","lastUpdated":""},LOWE("il2","IL")]},"Iowa":{"abbr":"IA","notes":"Both drivers can share blame regardless of fault.","stateFaultType":"","stateKeyThreshold":"","stateSignWhen":"","stateDoNotSign":"","stateDisqualifiers":"","firms":[LOWE("ia1","IA")]},"Kansas":{"abbr":"KS","notes":"Both drivers can share blame regardless of fault.","stateFaultType":"","stateKeyThreshold":"","stateSignWhen":"","stateDoNotSign":"","stateDisqualifiers":"","firms":[LOWE("ks1","KS")]},"Kentucky":{"abbr":"KY","notes":"Both drivers can share blame regardless of fault.","stateFaultType":"","stateKeyThreshold":"","stateSignWhen":"","stateDoNotSign":"","stateDisqualifiers":"","firms":[LOWE("ky1","KY")]},"Louisiana":{"abbr":"LA","notes":"Both drivers can share blame regardless of fault.","stateFaultType":"","stateKeyThreshold":"","stateSignWhen":"","stateDoNotSign":"","stateDisqualifiers":"","firms":[{"id":"la1","name":"Imbornone Law Firm","pronunciation":"im-bor-NOH-nee Law Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"16 Years Old","geographic":"LA","requirements":"","exclusions":"16 Years Old","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","lastUpdated":""}]},"Maryland":{"abbr":"MD","notes":"Client cannot be more than 50% at fault.","stateFaultType":"","stateKeyThreshold":"","stateSignWhen":"","stateDoNotSign":"","stateDisqualifiers":"","firms":[]},"Michigan":{"abbr":"MI","notes":"No-fault state — Michigan has strong PIP coverage requirements.","stateFaultType":"","stateKeyThreshold":"","stateSignWhen":"","stateDoNotSign":"","stateDisqualifiers":"","firms":[]},"Minnesota":{"abbr":"MN","notes":"Both drivers can share blame regardless of fault.","stateFaultType":"","stateKeyThreshold":"","stateSignWhen":"","stateDoNotSign":"","stateDisqualifiers":"","firms":[LOWE("mn1","MN")]},"Mississippi":{"abbr":"MS","notes":"Both drivers can share blame regardless of fault.","stateFaultType":"","stateKeyThreshold":"","stateSignWhen":"","stateDoNotSign":"","stateDisqualifiers":"","firms":[]},"Missouri":{"abbr":"MO","notes":"Both drivers can share blame regardless of fault.","stateFaultType":"","stateKeyThreshold":"","stateSignWhen":"","stateDoNotSign":"","stateDisqualifiers":"","firms":[{"id":"mo1","name":"Beck & Beck Missouri Car Accident Lawyers (B&B)","pronunciation":"BEK and BEK Missouri Car Accident Lawyers","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"16 Years Old","geographic":"MO","requirements":"Must submit intake link with ATC & Agreement.","exclusions":"16 Years Old","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"https://becklawmo.com/belief-leads/","notes":"Must submit link with intake, ATC & Agreement: becklawmo.com/belief-leads/","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","lastUpdated":""},LOWE("mo2","MO")]},"Montana":{"abbr":"MT","notes":"Both drivers can share blame regardless of fault.","stateFaultType":"","stateKeyThreshold":"","stateSignWhen":"","stateDoNotSign":"","stateDisqualifiers":"","firms":[LOWE("mt1","MT")]},"Nebraska":{"abbr":"NE","notes":"Client cannot be more than 50% at fault.","stateFaultType":"","stateKeyThreshold":"","stateSignWhen":"","stateDoNotSign":"","stateDisqualifiers":"","firms":[LOWE("ne1","NE")]},"Nevada":{"abbr":"NV","notes":"Client cannot be more than 51% at fault.","stateFaultType":"","stateKeyThreshold":"","stateSignWhen":"","stateDoNotSign":"","stateDisqualifiers":"","firms":[{"id":"nv1","name":"Richard Harris Law Firm","pronunciation":"Richard HAIR-iss Law Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"16 Years Old","geographic":"NV","requirements":"","exclusions":"16 Years Old","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","lastUpdated":""},{"id":"nv2","name":"Edward M. Bernstein & Associates (EMB)","pronunciation":"ED-werd M. BURN-stine and Associates","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"16 Years Old","geographic":"NV","requirements":"","exclusions":"16 Years Old","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","lastUpdated":""},LOWE("nv3","NV")]},"New Jersey":{"abbr":"NJ","notes":"Client cannot be more than 51% at fault.","stateFaultType":"","stateKeyThreshold":"","stateSignWhen":"","stateDoNotSign":"","stateDisqualifiers":"","firms":[{"id":"nj1","name":"Kwartler Manus","pronunciation":"KWART-ler MAY-nus","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"16 Years Old","geographic":"NJ","requirements":"MUST have 2 people in the car.","exclusions":"16 Years Old","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"MUST have 2 people in car. ","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","lastUpdated":""}]},"New Mexico":{"abbr":"NM","notes":"Both drivers can share blame regardless of fault.","stateFaultType":"","stateKeyThreshold":"","stateSignWhen":"","stateDoNotSign":"","stateDisqualifiers":"","firms":[{"id":"nm1","name":"KRW Lawyers","pronunciation":"K-R-W Lawyers","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"16 Years Old","geographic":"TX, NM","requirements":"","exclusions":"16 Years Old","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"Also covers TX. ","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","lastUpdated":""},LOWE("nm2","NM")]},"North Carolina":{"abbr":"NC","notes":"Tough state — client is barred if even 1% at fault.","stateFaultType":"","stateKeyThreshold":"","stateSignWhen":"","stateDoNotSign":"","stateDisqualifiers":"","firms":[{"id":"nc1","name":"Spartan Law Firm","pronunciation":"SPAR-ten Law Firm","accepting":true,"priority":"High","marketing":"TrueCare Marketing","minPD":"","minors":"16 Years Old","geographic":"NC, GA, IL, OH, TN","requirements":"","exclusions":"","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"Also covers GA, IL, OH, TN.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","lastUpdated":""}]},"North Dakota":{"abbr":"ND","notes":"Both drivers can share blame regardless of fault.","stateFaultType":"","stateKeyThreshold":"","stateSignWhen":"","stateDoNotSign":"","stateDisqualifiers":"","firms":[LOWE("nd1","ND")]},"Ohio":{"abbr":"OH","notes":"Client cannot be more than 51% at fault.","stateFaultType":"","stateKeyThreshold":"","stateSignWhen":"","stateDoNotSign":"","stateDisqualifiers":"","firms":[{"id":"oh1","name":"Spartan Law Firm","pronunciation":"SPAR-ten Law Firm","accepting":true,"priority":"High","marketing":"TrueCare Marketing","minPD":"","minors":"16 Years Old","geographic":"NC, GA, IL, OH, TN","requirements":"","exclusions":"","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"Also covers NC, GA, IL, TN.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","lastUpdated":""},LOWE("oh2","OH")]},"Oklahoma":{"abbr":"OK","notes":"Both drivers can share blame regardless of fault.","stateFaultType":"","stateKeyThreshold":"","stateSignWhen":"","stateDoNotSign":"","stateDisqualifiers":"","firms":[LOWE("ok1","OK")]},"Oregon":{"abbr":"OR","notes":"Both drivers can share blame regardless of fault.","stateFaultType":"","stateKeyThreshold":"","stateSignWhen":"","stateDoNotSign":"","stateDisqualifiers":"","firms":[LOWE("or1","OR")]},"Pennsylvania":{"abbr":"PA","notes":"Client cannot be more than 51% at fault.","stateFaultType":"","stateKeyThreshold":"","stateSignWhen":"","stateDoNotSign":"","stateDisqualifiers":"","firms":[{"id":"pa1","name":"Kwartler Manus","pronunciation":"KWART-ler MAY-nus","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"16 Years Old","geographic":"Philadelphia + Delaware, Montgomery, Chester, Bucks counties; Pittsburgh metro","requirements":"Philly area or Pittsburgh metro ONLY. MUST have 2 people in the car.","exclusions":"16 Years Old","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"Philly/Pittsburgh ONLY. MUST have 2 people in car. ","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","lastUpdated":""}]},"South Carolina":{"abbr":"SC","notes":"Client cannot be more than 51% at fault.","stateFaultType":"","stateKeyThreshold":"","stateSignWhen":"","stateDoNotSign":"","stateDisqualifiers":"","firms":[{"id":"sc1","name":"Woron and Dhillon Firm (W&D)","pronunciation":"WOR-on and DIL-on Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"$2,000","minors":"16 Years Old","geographic":"SC — Allendale, Orangeburg, Hampton, Jasper, Williamsburg preferred","requirements":"$2K min PD. Liberal venue counties: Allendale, Orangeburg, Hampton, Jasper, Williamsburg.","exclusions":"16 Years Old","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"$2K min PD. Liberal venues preferred. ","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","lastUpdated":""}]},"South Dakota":{"abbr":"SD","notes":"Both drivers can share blame regardless of fault.","stateFaultType":"","stateKeyThreshold":"","stateSignWhen":"","stateDoNotSign":"","stateDisqualifiers":"","firms":[LOWE("sd1","SD")]},"Tennessee":{"abbr":"TN","notes":"Client cannot be more than 50% at fault.","stateFaultType":"","stateKeyThreshold":"","stateSignWhen":"","stateDoNotSign":"","stateDisqualifiers":"","firms":[{"id":"tn1","name":"Spartan Law Firm","pronunciation":"SPAR-ten Law Firm","accepting":true,"priority":"High","marketing":"TrueCare Marketing","minPD":"","minors":"16 Years Old","geographic":"NC, GA, IL, OH, TN","requirements":"","exclusions":"","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"Also covers NC, GA, IL, OH.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","lastUpdated":""}]},"Texas":{"abbr":"TX","notes":"Client cannot be more than 51% at fault. TX tends to have high case values.","stateFaultType":"","stateKeyThreshold":"","stateSignWhen":"","stateDoNotSign":"","stateDisqualifiers":"","firms":[{"id":"tx1","name":"Edward Law Group","pronunciation":"ED-werd Law Group","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"$3,500","minors":"16 Years Old","geographic":"TX","requirements":"Min $3,500 for PD.","exclusions":"16 Years Old","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"Min $3,500 for PD.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","lastUpdated":""},{"id":"tx2","name":"KRW Lawyers","pronunciation":"K-R-W Lawyers","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"16 Years Old","geographic":"TX, NM","requirements":"","exclusions":"16 Years Old","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"Also covers NM.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","lastUpdated":""},{"id":"tx3","name":"Anderson Law","pronunciation":"AN-der-son Law","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"Over $1,000","minors":"16 Years Old","geographic":"Dallas/FTW (50mi), Austin (30mi)","requirements":"PD over $1,000. Dallas/FTW 50mi or Austin 30mi only.","exclusions":"","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"DFW (50mi) and Austin (30mi) ONLY.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","lastUpdated":""},{"id":"tx4","name":"Turnbull","pronunciation":"TURN-bull","accepting":true,"priority":"Medium","marketing":"Belief Marketing","minPD":"","minors":"16 Years Old","geographic":"AL, GA, TX","requirements":"","exclusions":"","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"Also covers AL and GA.","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","lastUpdated":""},LOWE("tx5","TX")]},"Utah":{"abbr":"UT","notes":"Client cannot be more than 50% at fault.","stateFaultType":"","stateKeyThreshold":"","stateSignWhen":"","stateDoNotSign":"","stateDisqualifiers":"","firms":[LOWE("ut1","UT")]},"Virginia":{"abbr":"VA","notes":"Client cannot be more than 50% at fault.","stateFaultType":"","stateKeyThreshold":"","stateSignWhen":"","stateDoNotSign":"","stateDisqualifiers":"","firms":[]},"Washington":{"abbr":"WA","notes":"Both drivers can share blame regardless of fault.","stateFaultType":"","stateKeyThreshold":"","stateSignWhen":"","stateDoNotSign":"","stateDisqualifiers":"","firms":[{"id":"wa1","name":"Bernard Law","pronunciation":"bur-NARD Law","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"16 Years Old","geographic":"WA","requirements":"Anyone under 12 does NOT need a signed agreement — attorney handles directly with guardian.","exclusions":"16 Years Old","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"Under 12: no signed agreement needed. ","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","lastUpdated":""},{"id":"wa2","name":"Herschensohn Law Firm (ZBH)","pronunciation":"HUR-shen-sohn Law Firm","accepting":true,"priority":"High","marketing":"Belief Marketing","minPD":"","minors":"16 Years Old","geographic":"WA","requirements":"Last 4 of SSN required on agreement. Full SSN required to proceed.","exclusions":"16 Years Old","trtNoTrt":"Under 1 month with no treatment","trtWithTrt":"31-90 days with treatment","contact":"","notes":"Last 4 SSN on agreement. Full SSN required to proceed. ","faultType":"","keyThreshold":"","signWhen":"","doNotSign":"","disqualifiers":"","lastUpdated":""},LOWE("wa3","WA")]},"Wisconsin":{"abbr":"WI","notes":"Both drivers can share blame regardless of fault.","stateFaultType":"","stateKeyThreshold":"","stateSignWhen":"","stateDoNotSign":"","stateDisqualifiers":"","firms":[LOWE("wi1","WI")]},"Wyoming":{"abbr":"WY","notes":"Both drivers can share blame regardless of fault.","stateFaultType":"","stateKeyThreshold":"","stateSignWhen":"","stateDoNotSign":"","stateDisqualifiers":"","firms":[LOWE("wy1","WY")]}}
-let appData=JSON.parse(JSON.stringify(DEFAULT_DATA)),adminUnlocked=false,search="",curState=null,editDraft=null,stateDraft=null,modalMode=null,searchMode="state";
-
-function makeSafeFirm(f){
-  const base={id:uid(),name:"Unnamed Firm",pronunciation:"",accepting:true,priority:"High",marketing:"",minPD:"",minors:"16 Years Old",geographic:"",requirements:"",exclusions:"",trtNoTrt:"",trtWithTrt:"",contact:"",notes:"",faultType:"",keyThreshold:"",signWhen:"",doNotSign:"",disqualifiers:"",lastUpdated:""};
-  return Object.assign(base, (f && typeof f==='object' && !Array.isArray(f)) ? f : {});
+function cleanMinorText(v) {
+  return String(v || "")
+    .replace(/No minors unless catastrophic\.?/gi, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
 }
-function normalizeAppData(data){
-  const out={};
-  if(!data || typeof data!=='object' || Array.isArray(data)) return JSON.parse(JSON.stringify(DEFAULT_DATA));
-  for(const [stateName, raw] of Object.entries(data)){
-    const s=(raw && typeof raw==='object' && !Array.isArray(raw))?raw:{};
-    const firms=Array.isArray(s.firms)?s.firms.map(makeSafeFirm):[];
-    out[stateName]={
-      abbr:s.abbr||stateName.slice(0,2).toUpperCase(),
-      notes:s.notes||"",
-      stateFaultType:s.stateFaultType||"",
-      stateKeyThreshold:s.stateKeyThreshold||"",
-      stateSignWhen:s.stateSignWhen||"",
-      stateDoNotSign:s.stateDoNotSign||"",
-      stateDisqualifiers:s.stateDisqualifiers||"",
+
+function makeSafeFirm(f) {
+  return {
+    id: f?.id || ("f" + Date.now() + Math.random().toString(36).slice(2, 5)),
+    name: f?.name || "Unnamed Firm",
+    pronunciation: f?.pronunciation || "",
+    accepting: typeof f?.accepting === "boolean" ? f.accepting : true,
+    priority: f?.priority || "High",
+    minors: "16 Years Old",
+    marketing: f?.marketing || "",
+    minPD: f?.minPD || "",
+    trtNoTrt: f?.trtNoTrt || "",
+    trtWithTrt: f?.trtWithTrt || "",
+    geographic: f?.geographic || "",
+    requirements: cleanMinorText(f?.requirements),
+    exclusions: cleanMinorText(f?.exclusions),
+    contact: f?.contact || "",
+    notes: cleanMinorText(f?.notes),
+    faultType: f?.faultType || "",
+    keyThreshold: f?.keyThreshold || "",
+    signWhen: f?.signWhen || "",
+    doNotSign: f?.doNotSign || "",
+    disqualifiers: f?.disqualifiers || "",
+    lastUpdated: f?.lastUpdated || ""
+  };
+}
+
+function normalizeAppData(data) {
+  if (!data || typeof data !== "object" || Array.isArray(data)) {
+    return JSON.parse(JSON.stringify(DEFAULT_DATA));
+  }
+
+  const out = {};
+  for (const [stateName, raw] of Object.entries(data)) {
+    const s = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+    const firms = Array.isArray(s.firms) ? s.firms.map(makeSafeFirm) : [];
+
+    out[stateName] = {
+      abbr: s.abbr || stateName.slice(0, 2).toUpperCase(),
+      notes: s.notes || "",
+      stateFaultType: s.stateFaultType || "",
+      stateKeyThreshold: s.stateKeyThreshold || "",
+      stateSignWhen: s.stateSignWhen || "",
+      stateDoNotSign: s.stateDoNotSign || "",
+      stateDisqualifiers: s.stateDisqualifiers || "",
       firms
     };
   }
-  return Object.keys(out).length?out:JSON.parse(JSON.stringify(DEFAULT_DATA));
+
+  return Object.keys(out).length ? out : JSON.parse(JSON.stringify(DEFAULT_DATA));
 }
 
-function totalFirmCount(data){return Object.values(data||{}).reduce((sum,state)=>sum+((state&&Array.isArray(state.firms))?state.firms.length:0),0);}
-function isValidPortalData(data){
-  if(!data||typeof data!=="object") return false;
-  const states=Object.keys(data);
-  if(!states.length) return false;
-  const hasFirmArrays=states.every(k=>data[k]&&Array.isArray(data[k].firms));
-  if(!hasFirmArrays) return false;
-  return totalFirmCount(data)>0;
+function totalFirmCount(data) {
+  return Object.values(data || {}).reduce((sum, state) => {
+    return sum + ((state && Array.isArray(state.firms)) ? state.firms.length : 0);
+  }, 0);
 }
-function defaultPortalData(){return JSON.parse(JSON.stringify(DEFAULT_DATA));}
 
-function updateCounter(){const el=document.getElementById("counterDisplay");if(el){const nS=Object.keys(appData).length;el.textContent=nS+" states";}}
-function uid(){return"f"+Date.now()+Math.random().toString(36).slice(2,5);}
-function pb(p){if(p==="High")return'<span class="badge b-green">High priority</span>';if(p==="Medium")return'<span class="badge b-blue">Medium priority</span>';return'<span class="badge b-gray">'+p+"</span>";}
-function ab(a){return a?'<span class="badge b-green">Accepting</span>':'<span class="badge b-red">Closed</span>';}
-function mb(m){if(!m)return"";if(m.toLowerCase().includes("catastrophic"))return'<span class="badge b-red">No minors</span>';if(m.includes("16"))return'<span class="badge b-amber">16+ only</span>';return"";}
+function isValidPortalData(data) {
+  if (!data || typeof data !== "object" || Array.isArray(data)) return false;
+  const states = Object.keys(data);
+  if (!states.length) return false;
+  return states.every(k => data[k] && Array.isArray(data[k].firms));
+}
+
+function defaultPortalData() {
+  return normalizeAppData(JSON.parse(JSON.stringify(DEFAULT_DATA)));
+}
+
+function updateCounter() {
+  const el = document.getElementById("counterDisplay");
+  if (el) {
+    const nS = Object.keys(appData || {}).length;
+    el.textContent = nS + " states";
+  }
+}
+
+function uid() {
+  return "f" + Date.now() + Math.random().toString(36).slice(2, 5);
+}
+
+function pb(p) {
+  if (p === "High") return '<span class="badge b-green">High priority</span>';
+  if (p === "Medium") return '<span class="badge b-blue">Medium priority</span>';
+  return '<span class="badge b-gray">' + (p || "") + '</span>';
+}
+
+function ab(a) {
+  return a ? '<span class="badge b-green">Accepting</span>' : '<span class="badge b-red">Closed</span>';
+}
+
+function mb(m) {
+  if (!m) return "";
+  if (String(m).includes("16")) return '<span class="badge b-amber">16+ only</span>';
+  return "";
+}
 
 async function loadDataFromCloud() {
   const { ref, get, set } = window.firebaseFns;
   const db = window.firebaseDb;
+
   try {
     const snapshot = await get(ref(db, "portalData"));
     if (snapshot.exists() && isValidPortalData(snapshot.val())) {
@@ -291,35 +128,84 @@ async function loadDataFromCloud() {
     console.error("Load failed:", err);
     appData = defaultPortalData();
   }
+
+  if (!curState || !appData[curState]) {
+    curState = Object.keys(appData)[0] || null;
+  }
+
   fullRender();
 }
 
 async function saveData() {
   const { ref, set } = window.firebaseFns;
   const db = window.firebaseDb;
+  suppressRealtime = true;
+
   try {
-    await set(ref(db, "portalData"), appData);
+    await set(ref(db, "portalData"), normalizeAppData(appData));
     const btn = document.getElementById("exportBtn");
     if (btn) {
       const old = btn.textContent;
       btn.textContent = "✓ Saved";
-      setTimeout(() => btn.textContent = old, 1500);
+      setTimeout(() => {
+        btn.textContent = old;
+      }, 1500);
     }
   } catch (err) {
     console.error("Save failed:", err);
     alert("Could not save changes.");
+  } finally {
+    setTimeout(() => {
+      suppressRealtime = false;
+    }, 500);
   }
 }
 window.saveData = saveData;
 
-function firmCard(f,sk){
-  const adminBtns=adminUnlocked?`<div style="display:flex;gap:5px;margin-left:8px;" onclick="event.stopPropagation()"><button class="btn btn-sm btn-blue" onclick="openEditFirm('${sk}','${f.id}')">Edit</button><button class="btn btn-sm btn-red" onclick="deleteFirm('${sk}','${f.id}')">Remove</button></div>`:"";
-  const rows=[[f.minPD,"Min. property damage"],[f.trtNoTrt,"No treatment window"],[f.trtWithTrt,"With treatment window"],[f.geographic,"Geographic coverage"],[f.requirements,"Requirements"],[f.exclusions,"Exclusions"],[f.marketing,"Intake Source"],[f.contact,"Contact / link"]].filter(r=>r[0]);
-  const contactVal=(v,l)=>{if(l!=="Contact / link")return`<div class="req-val">${v}</div>`;const isUrl=/^https?:\/\//i.test(v)||/^www\./i.test(v);const href=v.startsWith("http")?v:"https://"+v;return isUrl?`<div class="req-val"><a href="${href}" target="_blank" rel="noopener" style="color:#7ab0d8;text-decoration:underline;">${v}</a></div>`:`<div class="req-val">${v}</div>`;};
-  const speakBtn=f.pronunciation?`<button class="speak-btn" data-id="${f.id}" title="Hear pronunciation" onclick="event.stopPropagation();speakFirm('${f.id}',\`${(f.pronunciation||"").replace(/`/g,"'")}\`)">🔊</button>`:"";
-  const updatedLine=f.lastUpdated?`<div class="firm-updated">Updated: ${f.lastUpdated}</div>`:"";
-  const extraSections=[];
-  return`<div class="firm-card${f.accepting?"":" closed"}">
+function contactVal(v, label) {
+  if (label !== "Contact / link") return `<div class="req-val">${v}</div>`;
+  const isUrl = /^https?:\/\//i.test(v) || /^www\./i.test(v);
+  const href = v.startsWith("http") ? v : "https://" + v;
+  return isUrl
+    ? `<div class="req-val"><a href="${href}" target="_blank" rel="noopener" style="color:#7ab0d8;text-decoration:underline;">${v}</a></div>`
+    : `<div class="req-val">${v}</div>`;
+}
+
+function firmCard(rawFirm, stateKey) {
+  const f = makeSafeFirm(rawFirm);
+
+  const adminBtns = adminUnlocked
+    ? `<div style="display:flex;gap:5px;margin-left:8px;" onclick="event.stopPropagation()">
+         <button class="btn btn-sm btn-blue" onclick="openEditFirm('${stateKey}','${f.id}')">Edit</button>
+         <button class="btn btn-sm btn-red" onclick="deleteFirm('${stateKey}','${f.id}')">Remove</button>
+       </div>`
+    : "";
+
+  const rows = [
+    [f.minPD, "Min. property damage"],
+    [f.trtNoTrt, "No treatment window"],
+    [f.trtWithTrt, "With treatment window"],
+    [f.geographic, "Geographic coverage"],
+    [f.requirements, "Requirements"],
+    [f.exclusions, "Exclusions"],
+    [f.marketing, "Intake Source"],
+    [f.contact, "Contact / link"]
+  ].filter(r => r[0]);
+
+  const updatedLine = f.lastUpdated ? `<div class="firm-updated">Updated: ${f.lastUpdated}</div>` : "";
+  const speakBtn = f.pronunciation
+    ? `<button class="speak-btn" data-id="${f.id}" title="Hear pronunciation" onclick="event.stopPropagation();speakFirm('${f.id}', \`${String(f.pronunciation).replace(/`/g, "'")}\`)">🔊</button>`
+    : "";
+
+  const extraSections = [
+    ["Fault Type", f.faultType],
+    ["Key Threshold", f.keyThreshold],
+    ["Sign the Lead When", f.signWhen],
+    ["Do Not Sign When", f.doNotSign],
+    ["State-Specific Disqualifiers", f.disqualifiers]
+  ].filter(([, v]) => v);
+
+  return `<div class="firm-card${f.accepting ? "" : " closed"}">
     <div class="firm-card-header">
       <div class="firm-header-left">
         <span class="firm-collapse-icon">▶</span>
@@ -331,74 +217,99 @@ function firmCard(f,sk){
       </div>
     </div>
     <div class="firm-card-body">
-      <div class="req-grid" style="margin-top:12px;">${rows.map(([v,l])=>`<div class="req"><div class="req-lbl">${l}</div>${contactVal(v,l)}</div>`).join("")}</div>
-      ${f.notes?`<div class="rep-note"><strong>Rep note:</strong> ${f.notes}</div>`:""}
-      ${extraSections.map(([l,v])=>`<div class="firm-section"><div class="firm-section-title">${l}</div><div class="firm-section-val">${v}</div></div>`).join("")}
+      <div class="req-grid" style="margin-top:12px;">
+        ${rows.map(([v, l]) => `<div class="req"><div class="req-lbl">${l}</div>${contactVal(v, l)}</div>`).join("")}
+      </div>
+      ${f.notes ? `<div class="rep-note"><strong>Rep note:</strong> ${f.notes}</div>` : ""}
+      ${extraSections.map(([l, v]) => `<div class="firm-section"><div class="firm-section-title">${l}</div><div class="firm-section-val">${v}</div></div>`).join("")}
     </div>
   </div>`;
 }
 
-function stateMapEmbed(stateName){
-  const q=encodeURIComponent(stateName+", USA");
-  return`<div class="state-map-wrap"><iframe src="https://maps.google.com/maps?q=${q}&z=5&output=embed" loading="lazy" title="${stateName} map"></iframe></div>`;
+function stateMapEmbed(stateName) {
+  const q = encodeURIComponent(stateName + ", USA");
+  return `<div class="state-map-wrap"><iframe src="https://maps.google.com/maps?q=${q}&z=5&output=embed" loading="lazy" title="${stateName} map"></iframe></div>`;
 }
 
-function renderFirmList(){
-  const q=search.toLowerCase().trim();
-  const firmMap={};
-  Object.keys(appData).sort().forEach(stateName=>{
-    const state = appData[stateName] || {};
-    const stateAbbr = state.abbr || "";
-    const firms = Array.isArray(state.firms) ? state.firms : [];
-    firms.forEach(rawFirm=>{
-      const f = makeSafeFirm(rawFirm);
-      const firmName = (f.name || "Unnamed Firm");
-      if(q && !firmName.toLowerCase().includes(q) && !stateName.toLowerCase().includes(q) && !stateAbbr.toLowerCase().includes(q)) return;
-      if(!firmMap[firmName]) firmMap[firmName] = {name: firmName, states: []};
-      firmMap[firmName].states.push({stateName, abbr: stateAbbr, accepting: !!f.accepting});
-    });
+function renderFirmList() {
+  const q = search.toLowerCase().trim();
+  if (!q) return `<div class="firm-result-empty">Type a firm name to search</div>`;
+
+  const results = [];
+  Object.keys(appData).sort().forEach(stateName => {
+    const state = appData[stateName];
+    const matched = (state.firms || []).map(makeSafeFirm).filter(f => f.name.toLowerCase().includes(q));
+    if (matched.length) results.push({ stateName, firms: matched });
   });
-  const firms=Object.values(firmMap).sort((a,b)=>a.name.localeCompare(b.name));
-  if(!firms.length)return`<div class="firm-result-empty">No firms match "${search}"</div>`;
-  return`<p class="hint">${firms.length} firm${firms.length!==1?"s":""} — click a firm or a state to open details</p>`+
-    firms.map(({name,states})=>{
-      const stateCount=states.length;
-      const preferred = (states.find(s=>s.accepting) || states[0] || {}).stateName || "";
-      const tooltipRows=states.map(s=>`<div class="tt-state clickable" data-open-state="${String(s.stateName).replace(/"/g, "&quot;")}"><span class="tt-abbr">${s.abbr}</span><span class="tt-sname">${s.stateName}</span><span class="tt-badges"><span class="tt-badge ${s.accepting?"open":"closed"}">${s.accepting?"Open":"Closed"}</span></span></div>`).join("");
-      return`<div class="firm-name-row" data-open-state="${String(preferred).replace(/"/g, "&quot;")}"><span class="fnr-name">${name}</span><span class="fnr-count">${stateCount} state${stateCount!==1?"s":""}</span><div class="fnr-tooltip"><div class="tt-title">States covered</div>${tooltipRows}</div></div>`;
-    }).join("");
+
+  if (!results.length) return `<div class="firm-result-empty">No firms match "${search}"</div>`;
+
+  const totalFirms = results.reduce((a, r) => a + r.firms.length, 0);
+
+  return `<p class="hint">${totalFirms} firm${totalFirms !== 1 ? "s" : ""} in ${results.length} state${results.length !== 1 ? "s" : ""}</p>` +
+    results.map(({ stateName, firms }) =>
+      `<div class="firm-result-group">
+        <div class="firm-result-state-label" onclick="viewState('${stateName}');setSearchMode('state');">${appData[stateName].abbr} — ${stateName}</div>
+        ${firms.map(f => firmCard(f, stateName)).join("")}
+      </div>`
+    ).join("");
 }
 
-function renderList(){
-  if(searchMode==="firm")return renderFirmList();
-  const sorted=Object.keys(appData).sort();
-  const q=search.toLowerCase();
-  const filtered=q?sorted.filter(s=>s.toLowerCase().includes(q)||((appData[s]||{}).abbr||"").toLowerCase()===q):sorted;
-  if(!filtered.length)return`<div class="no-result">No states match</div>`;
-  const rows=filtered.map(s=>{
-    const activeClass=curState===s?" active-state":"";
-    return`<div class="state-row${activeClass}" data-state="${String(s).replace(/"/g, "&quot;")}"><div class="sr-left"><span class="sr-abbr">${(appData[s]||{}).abbr||""}</span><span class="sr-name">${s}</span></div><div class="sr-right"><span class="sr-arrow">›</span></div></div>`;
+function renderList() {
+  if (searchMode === "firm") return renderFirmList();
+
+  const sorted = Object.keys(appData).sort();
+  const q = search.toLowerCase();
+  const filtered = q
+    ? sorted.filter(s => s.toLowerCase().includes(q) || appData[s].abbr.toLowerCase() === q)
+    : sorted;
+
+  if (!filtered.length) return `<div class="no-result">No states match</div>`;
+
+  const rows = filtered.map(s => {
+    const activeClass = curState === s ? " active-state" : "";
+    return `<div class="state-row${activeClass}" onclick="viewState('${s}')">
+      <div class="sr-left"><span class="sr-abbr">${appData[s].abbr}</span><span class="sr-name">${s}</span></div>
+      <div class="sr-right"><span class="sr-arrow">›</span></div>
+    </div>`;
   }).join("");
-  const addBtn=adminUnlocked?`<div style="margin-top:10px;"><button class="btn btn-blue btn-sm" onclick="openAddState()">+ Add state</button></div>`:"";
-  return`<p class="hint">${filtered.length} states</p>${rows}${addBtn}`;
+
+  const addBtn = adminUnlocked
+    ? `<div style="margin-top:10px;"><button class="btn btn-blue btn-sm" onclick="openAddState()">+ Add state</button></div>`
+    : "";
+
+  return `<p class="hint">${filtered.length} states</p>${rows}${addBtn}`;
 }
 
-function renderDetail(key){
-  if(!key)return`<div class="empty-state"><div class="empty-icon">◈</div><div class="empty-title">Select a state</div><div class="empty-sub">Click any state on the left to view firms and requirements</div></div>`;
-  const s=appData[key]||{abbr:'',stateFaultType:'',stateKeyThreshold:'',stateSignWhen:'',stateDoNotSign:'',stateDisqualifiers:'',firms:[]}, firms=Array.isArray(s.firms)?s.firms.map(makeSafeFirm):[], active=firms.filter(f=>f.accepting), closed=firms.filter(f=>!f.accepting);
-  const adminBtns=adminUnlocked?`<div class="right-admin-bar"><button class="btn btn-sm" onclick="openEditState('${key}')">Edit state</button><button class="btn btn-sm btn-blue" onclick="openAddFirm('${key}')">+ Add firm</button></div>`:"";
+function renderDetail(key) {
+  if (!key || !appData[key]) {
+    return `<div class="empty-state"><div class="empty-icon">◈</div><div class="empty-title">Select a state</div><div class="empty-sub">Click any state on the left to view firms and requirements</div></div>`;
+  }
+
+  const s = appData[key];
+  const firms = Array.isArray(s.firms) ? s.firms.map(makeSafeFirm) : [];
+  const active = firms.filter(f => f.accepting);
+  const closed = firms.filter(f => !f.accepting);
+
+  const adminBtns = adminUnlocked
+    ? `<div class="right-admin-bar">
+         <button class="btn btn-sm" onclick="openEditState('${key}')">Edit state</button>
+         <button class="btn btn-sm btn-blue" onclick="openAddFirm('${key}')">+ Add firm</button>
+       </div>`
+    : "";
+
   let infoHtml;
-  if(adminUnlocked){
-    infoHtml=`<div class="state-info-grid">
-      <div class="state-info-block"><div class="sib-label">Fault Type</div><textarea id="inlineStateFaultType" placeholder="Enter fault type…">${s.stateFaultType||""}</textarea><div class="sib-save-row"><span>Admin edit</span><button class="btn btn-sm btn-green" onclick="saveInlineField('${key}','stateFaultType','inlineStateFaultType')">Save</button></div></div>
-      <div class="state-info-block"><div class="sib-label">Key Threshold</div><textarea id="inlineStateKeyThreshold" placeholder="Enter key threshold…">${s.stateKeyThreshold||""}</textarea><div class="sib-save-row"><span>Admin edit</span><button class="btn btn-sm btn-green" onclick="saveInlineField('${key}','stateKeyThreshold','inlineStateKeyThreshold')">Save</button></div></div>
-      <div class="state-info-block"><div class="sib-label">Sign the Lead When</div><textarea id="inlineStateSignWhen" placeholder="Enter conditions…">${s.stateSignWhen||""}</textarea><div class="sib-save-row"><span>Admin edit</span><button class="btn btn-sm btn-green" onclick="saveInlineField('${key}','stateSignWhen','inlineStateSignWhen')">Save</button></div></div>
-      <div class="state-info-block"><div class="sib-label">Do Not Sign When</div><textarea id="inlineStateDoNotSign" placeholder="Enter conditions…">${s.stateDoNotSign||""}</textarea><div class="sib-save-row"><span>Admin edit</span><button class="btn btn-sm btn-green" onclick="saveInlineField('${key}','stateDoNotSign','inlineStateDoNotSign')">Save</button></div></div>
-      <div class="state-info-block"><div class="sib-label">State-Specific Disqualifiers</div><textarea id="inlineStateDisqualifiers" placeholder="Enter disqualifiers…">${s.stateDisqualifiers||""}</textarea><div class="sib-save-row"><span>Admin edit</span><button class="btn btn-sm btn-green" onclick="saveInlineField('${key}','stateDisqualifiers','inlineStateDisqualifiers')">Save</button></div></div>
+  if (adminUnlocked) {
+    infoHtml = `<div class="state-info-grid">
+      <div class="state-info-block"><div class="sib-label">Fault Type</div><textarea id="inlineStateFaultType">${s.stateFaultType || ""}</textarea><div class="sib-save-row"><span>Admin edit</span><button class="btn btn-sm btn-green" onclick="saveInlineField('${key}','stateFaultType','inlineStateFaultType')">Save</button></div></div>
+      <div class="state-info-block"><div class="sib-label">Key Threshold</div><textarea id="inlineStateKeyThreshold">${s.stateKeyThreshold || ""}</textarea><div class="sib-save-row"><span>Admin edit</span><button class="btn btn-sm btn-green" onclick="saveInlineField('${key}','stateKeyThreshold','inlineStateKeyThreshold')">Save</button></div></div>
+      <div class="state-info-block"><div class="sib-label">Sign the Lead When</div><textarea id="inlineStateSignWhen">${s.stateSignWhen || ""}</textarea><div class="sib-save-row"><span>Admin edit</span><button class="btn btn-sm btn-green" onclick="saveInlineField('${key}','stateSignWhen','inlineStateSignWhen')">Save</button></div></div>
+      <div class="state-info-block"><div class="sib-label">Do Not Sign When</div><textarea id="inlineStateDoNotSign">${s.stateDoNotSign || ""}</textarea><div class="sib-save-row"><span>Admin edit</span><button class="btn btn-sm btn-green" onclick="saveInlineField('${key}','stateDoNotSign','inlineStateDoNotSign')">Save</button></div></div>
+      <div class="state-info-block"><div class="sib-label">State-Specific Disqualifiers</div><textarea id="inlineStateDisqualifiers">${s.stateDisqualifiers || ""}</textarea><div class="sib-save-row"><span>Admin edit</span><button class="btn btn-sm btn-green" onclick="saveInlineField('${key}','stateDisqualifiers','inlineStateDisqualifiers')">Save</button></div></div>
     </div>`;
   } else {
-    const sfv=(v)=>v?`<div class="sib-value">${v}</div>`:`<div class="sib-value empty">Not set</div>`;
-    infoHtml=`<div class="state-info-grid">
+    const sfv = v => v ? `<div class="sib-value">${v}</div>` : `<div class="sib-value empty">Not set</div>`;
+    infoHtml = `<div class="state-info-grid">
       <div class="state-info-block"><div class="sib-label">Fault Type</div>${sfv(s.stateFaultType)}</div>
       <div class="state-info-block"><div class="sib-label">Key Threshold</div>${sfv(s.stateKeyThreshold)}</div>
       <div class="state-info-block"><div class="sib-label">Sign the Lead When</div>${sfv(s.stateSignWhen)}</div>
@@ -406,139 +317,424 @@ function renderDetail(key){
       <div class="state-info-block"><div class="sib-label">State-Specific Disqualifiers</div>${sfv(s.stateDisqualifiers)}</div>
     </div>`;
   }
-  return`<div class="state-header"><span class="sname">${key} (${s.abbr})</span></div>${stateMapEmbed(key)}${infoHtml}${adminBtns}${active.length?`<div class="sec-title">Accepting leads</div>`+active.map(f=>firmCard(f,key)).join(""):""} ${closed.length?`<div class="sec-title">Not currently accepting</div>`+closed.map(f=>firmCard(f,key)).join(""):""} ${!active.length&&!closed.length?`<div class="no-result" style="margin-top:24px;">No firms assigned yet.</div>`:""}`;
+
+  return `<div class="state-header"><span class="sname">${key} (${s.abbr})</span></div>
+    ${stateMapEmbed(key)}
+    ${infoHtml}
+    ${adminBtns}
+    ${active.length ? `<div class="sec-title">Accepting leads</div>` + active.map(f => firmCard(f, key)).join("") : ""}
+    ${closed.length ? `<div class="sec-title">Not currently accepting</div>` + closed.map(f => firmCard(f, key)).join("") : ""}
+    ${!active.length && !closed.length ? `<div class="no-result" style="margin-top:24px;">No firms assigned yet.</div>` : ""}`;
 }
 
-function buildModal(){
-  if(!modalMode)return"";
-  if(modalMode==="pw")return`<div class="overlay" id="ov" onclick="if(event.target.id==='ov')closeModal()"><div class="modal"><h2>Admin login</h2><div class="field"><label>Password</label><input type="password" id="pwf" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')submitPw()"/><small class="helper">Uses your Firebase email/password account.</small></div><div class="err" id="pwerr"></div><div class="modal-footer"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-green" onclick="submitPw()">Unlock</button></div></div></div>`;
-  if(modalMode==="firm"&&editDraft){
-    const d=editDraft;
-    const fields=[["name","Firm name","text"],["pronunciation","Pronunciation (phonetic)","text"],["minPD","Min. property damage","text"],["trtNoTrt","No treatment window","text"],["trtWithTrt","With treatment window","text"],["geographic","Geographic coverage","text"],["requirements","Requirements","textarea"],["exclusions","Exclusions","text"],["marketing","Intake Source","text"],["contact","Contact / link","text"],["notes","Rep note","textarea"],["faultType","Fault Type","textarea"],["keyThreshold","Key Threshold","textarea"],["signWhen","Sign the Lead When","textarea"],["doNotSign","Do Not Sign When","textarea"],["disqualifiers","State-Specific Disqualifiers","textarea"],["lastUpdated","Last Updated (e.g. Apr 21, 2026)","text"]];
-    return`<div class="overlay" id="ov" onclick="if(event.target.id==='ov')closeModal()"><div class="modal"><h2>${d._new?"Add firm":"Edit firm"}</h2><div class="two-col"><div class="field"><label>Status</label><select id="ef_a"><option value="true" ${d.accepting!==false?"selected":""}>Accepting</option><option value="false" ${d.accepting===false?"selected":""}>Not accepting</option></select></div><div class="field"><label>Priority</label><select id="ef_p">${["High","Medium","Paused"].map(p=>`<option ${d.priority===p?"selected":""}>${p}</option>`).join("")}</select></div></div><div class="field"><label>Minor policy</label><select id="ef_m"><option value="16 Years Old" ${(d.minors||"")==="16 Years Old"?"selected":""}>16 Years Old</option><option value="16 Years Old" ${(d.minors||"")==="16 Years Old"?"selected":""}>16 Years Old</option><option value="" ${!d.minors?"selected":""}>No restriction</option></select></div>${fields.map(([k,l,t])=>`<div class="field"><label>${l}</label>${t==="textarea"?`<textarea id="ef_${k}">${d[k]||""}</textarea>`:`<input type="text" id="ef_${k}" value="${(d[k]||"").replace(/"/g,"&quot;")}"/>`}</div>`).join("")}<div class="modal-footer"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-green" onclick="saveFirmEdit()">Save</button></div></div></div>`;
+function buildModal() {
+  if (!modalMode) return "";
+
+  if (modalMode === "pw") {
+    return `<div class="overlay" id="ov" onclick="if(event.target.id==='ov')closeModal()">
+      <div class="modal">
+        <h2>Admin login</h2>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="pwf" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')submitPw()"/>
+          <small class="helper">Uses your Firebase email/password account.</small>
+        </div>
+        <div class="err" id="pwerr"></div>
+        <div class="modal-footer">
+          <button class="btn" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-green" onclick="submitPw()">Unlock</button>
+        </div>
+      </div>
+    </div>`;
   }
-  if(modalMode==="state"&&stateDraft)return`<div class="overlay" id="ov" onclick="if(event.target.id==='ov')closeModal()"><div class="modal"><h2>Edit state</h2><div class="two-col"><div class="field"><label>State name</label><input type="text" id="es_n" value="${stateDraft.key}"/></div><div class="field"><label>Abbreviation</label><input type="text" id="es_a" value="${stateDraft.abbr}"/></div></div><div class="field"><label>Fault Type</label><textarea id="es_sft">${stateDraft.stateFaultType||""}</textarea></div><div class="field"><label>Key Threshold</label><textarea id="es_skt">${stateDraft.stateKeyThreshold||""}</textarea></div><div class="field"><label>Sign the Lead When</label><textarea id="es_ssw">${stateDraft.stateSignWhen||""}</textarea></div><div class="field"><label>Do Not Sign When</label><textarea id="es_sdns">${stateDraft.stateDoNotSign||""}</textarea></div><div class="field"><label>State-Specific Disqualifiers</label><textarea id="es_sdq">${stateDraft.stateDisqualifiers||""}</textarea></div><div class="modal-footer"><button class="btn btn-red" onclick="deleteState('${stateDraft.key}')">Delete state</button><button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-green" onclick="saveStateEdit('${stateDraft.key}')">Save</button></div></div></div>`;
-  if(modalMode==="addstate")return`<div class="overlay" id="ov" onclick="if(event.target.id==='ov')closeModal()"><div class="modal"><h2>Add new state</h2><div class="two-col"><div class="field"><label>State name</label><input type="text" id="as_n" placeholder="e.g. Michigan"/></div><div class="field"><label>Abbreviation</label><input type="text" id="as_a" placeholder="e.g. MI"/></div></div><div class="field"><label>Fault Type</label><textarea id="as_sft" placeholder="e.g. Comparative fault…"></textarea></div><div class="field"><label>Key Threshold</label><textarea id="as_skt" placeholder="e.g. Min $1,000 PD…"></textarea></div><div class="field"><label>Sign the Lead When</label><textarea id="as_ssw" placeholder="Conditions to sign…"></textarea></div><div class="field"><label>Do Not Sign When</label><textarea id="as_sdns" placeholder="Conditions to decline…"></textarea></div><div class="field"><label>State-Specific Disqualifiers</label><textarea id="as_sdq" placeholder="Disqualifying factors…"></textarea></div><div class="modal-footer"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-green" onclick="addState()">Add state</button></div></div></div>`;
-  return"";
+
+  if (modalMode === "firm" && editDraft) {
+    const d = editDraft;
+    const fields = [
+      ["name","Firm name","text"],
+      ["pronunciation","Pronunciation (phonetic)","text"],
+      ["minPD","Min. property damage","text"],
+      ["trtNoTrt","No treatment window","text"],
+      ["trtWithTrt","With treatment window","text"],
+      ["geographic","Geographic coverage","text"],
+      ["requirements","Requirements","textarea"],
+      ["exclusions","Exclusions","text"],
+      ["marketing","Intake Source","text"],
+      ["contact","Contact / link","text"],
+      ["notes","Rep note","textarea"],
+      ["faultType","Fault Type","textarea"],
+      ["keyThreshold","Key Threshold","textarea"],
+      ["signWhen","Sign the Lead When","textarea"],
+      ["doNotSign","Do Not Sign When","textarea"],
+      ["disqualifiers","State-Specific Disqualifiers","textarea"],
+      ["lastUpdated","Last Updated","text"]
+    ];
+
+    return `<div class="overlay" id="ov" onclick="if(event.target.id==='ov')closeModal()">
+      <div class="modal">
+        <h2>${d._new ? "Add firm" : "Edit firm"}</h2>
+        <div class="two-col">
+          <div class="field"><label>Status</label><select id="ef_a"><option value="true" ${d.accepting !== false ? "selected" : ""}>Accepting</option><option value="false" ${d.accepting === false ? "selected" : ""}>Not accepting</option></select></div>
+          <div class="field"><label>Priority</label><select id="ef_p">${["High","Medium","Paused"].map(p => `<option ${d.priority === p ? "selected" : ""}>${p}</option>`).join("")}</select></div>
+        </div>
+        <div class="field"><label>Minor policy</label><select id="ef_m"><option value="16 Years Old" selected>16 Years Old</option></select></div>
+        ${fields.map(([k,l,t]) => `<div class="field"><label>${l}</label>${t === "textarea" ? `<textarea id="ef_${k}">${d[k] || ""}</textarea>` : `<input type="text" id="ef_${k}" value="${String(d[k] || "").replace(/"/g, "&quot;")}"/>`}</div>`).join("")}
+        <div class="modal-footer">
+          <button class="btn" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-green" onclick="saveFirmEdit()">Save</button>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  if (modalMode === "state" && stateDraft) {
+    return `<div class="overlay" id="ov" onclick="if(event.target.id==='ov')closeModal()">
+      <div class="modal">
+        <h2>Edit state</h2>
+        <div class="two-col">
+          <div class="field"><label>State name</label><input type="text" id="es_n" value="${stateDraft.key}"/></div>
+          <div class="field"><label>Abbreviation</label><input type="text" id="es_a" value="${stateDraft.abbr}"/></div>
+        </div>
+        <div class="field"><label>Fault Type</label><textarea id="es_sft">${stateDraft.stateFaultType || ""}</textarea></div>
+        <div class="field"><label>Key Threshold</label><textarea id="es_skt">${stateDraft.stateKeyThreshold || ""}</textarea></div>
+        <div class="field"><label>Sign the Lead When</label><textarea id="es_ssw">${stateDraft.stateSignWhen || ""}</textarea></div>
+        <div class="field"><label>Do Not Sign When</label><textarea id="es_sdns">${stateDraft.stateDoNotSign || ""}</textarea></div>
+        <div class="field"><label>State-Specific Disqualifiers</label><textarea id="es_sdq">${stateDraft.stateDisqualifiers || ""}</textarea></div>
+        <div class="modal-footer">
+          <button class="btn btn-red" onclick="deleteState('${stateDraft.key}')">Delete state</button>
+          <button class="btn" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-green" onclick="saveStateEdit('${stateDraft.key}')">Save</button>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  if (modalMode === "addstate") {
+    return `<div class="overlay" id="ov" onclick="if(event.target.id==='ov')closeModal()">
+      <div class="modal">
+        <h2>Add new state</h2>
+        <div class="two-col">
+          <div class="field"><label>State name</label><input type="text" id="as_n" placeholder="e.g. Michigan"/></div>
+          <div class="field"><label>Abbreviation</label><input type="text" id="as_a" placeholder="e.g. MI"/></div>
+        </div>
+        <div class="field"><label>Fault Type</label><textarea id="as_sft"></textarea></div>
+        <div class="field"><label>Key Threshold</label><textarea id="as_skt"></textarea></div>
+        <div class="field"><label>Sign the Lead When</label><textarea id="as_ssw"></textarea></div>
+        <div class="field"><label>Do Not Sign When</label><textarea id="as_sdns"></textarea></div>
+        <div class="field"><label>State-Specific Disqualifiers</label><textarea id="as_sdq"></textarea></div>
+        <div class="modal-footer">
+          <button class="btn" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-green" onclick="addState()">Add state</button>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  return "";
 }
 
-function fullRender(){
-  const listEl=document.getElementById("stateList");
-  const detailEl=document.getElementById("detailPanel");
-  if(listEl)listEl.innerHTML=renderList();
-  if(detailEl)detailEl.innerHTML=renderDetail(curState);
-  document.getElementById("modalRoot").innerHTML=buildModal();
+function fullRender() {
+  const listEl = document.getElementById("stateList");
+  const detailEl = document.getElementById("detailPanel");
+  if (listEl) listEl.innerHTML = renderList();
+  if (detailEl) detailEl.innerHTML = renderDetail(curState);
+  const modalRoot = document.getElementById("modalRoot");
+  if (modalRoot) modalRoot.innerHTML = buildModal();
   updateCounter();
-  const sb=document.getElementById("modeStateBtn"),fb=document.getElementById("modeFirmBtn");
-  if(sb)sb.className="mode-btn"+(searchMode==="state"?" active":"");
-  if(fb)fb.className="mode-btn"+(searchMode==="firm"?" active":"");
-  const saveBtn=document.getElementById("exportBtn");
-  if(saveBtn) saveBtn.classList.toggle("visible", adminUnlocked);
-  if(modalMode==="pw")setTimeout(()=>{const f=document.getElementById("pwf");if(f)f.focus();},30);
+
+  const sb = document.getElementById("modeStateBtn");
+  const fb = document.getElementById("modeFirmBtn");
+  if (sb) sb.className = "mode-btn" + (searchMode === "state" ? " active" : "");
+  if (fb) fb.className = "mode-btn" + (searchMode === "firm" ? " active" : "");
+
+  const saveBtn = document.getElementById("exportBtn");
+  if (saveBtn) saveBtn.classList.toggle("visible", adminUnlocked);
+
+  if (modalMode === "pw") {
+    setTimeout(() => {
+      const f = document.getElementById("pwf");
+      if (f) f.focus();
+    }, 30);
+  }
 }
 
-function setSearchMode(mode){
-  searchMode=mode;
-  search="";
-  const inp=document.getElementById("searchInput");
-  if(inp){inp.value="";inp.placeholder=mode==="firm"?"Search law firms…":"Search states…";}
-  fullRender();
-}
-function handleSearch(v){search=v;fullRender();}
-function openFirmState(stateName){
-  if(!stateName || !appData[stateName]) return;
+function setSearchMode(mode) {
+  searchMode = mode;
   search = "";
-  curState = stateName;
-  searchMode = "state";
-  const inp=document.getElementById("searchInput");
-  if(inp){
-    inp.value="";
-    inp.placeholder="Search states…";
+  const inp = document.getElementById("searchInput");
+  if (inp) {
+    inp.value = "";
+    inp.placeholder = mode === "firm" ? "Search law firms…" : "Search states…";
   }
   fullRender();
-  const detail = document.getElementById("detailPanel");
-  if(detail) detail.scrollTop = 0;
 }
-window.openFirmState=openFirmState;
+window.setSearchMode = setSearchMode;
 
-function viewState(s){
-  if(!s || !appData[s]) return;
+function handleSearch(v) {
+  search = v;
+  fullRender();
+}
+window.handleSearch = handleSearch;
+
+function viewState(s) {
+  if (!s || !appData[s]) return;
   curState = s;
-  searchMode = "state";
-  const inp=document.getElementById("searchInput");
-  if(inp){
-    inp.value="";
-    inp.placeholder="Search states…";
-  }
   fullRender();
-  const detail = document.getElementById("detailPanel");
-  if(detail) detail.scrollTop = 0;
 }
+window.viewState = viewState;
 
-function openAdminPw(){modalMode="pw";fullRender();}
-function closeModal(){modalMode=null;editDraft=null;stateDraft=null;fullRender();}
+function openAdminPw() {
+  modalMode = "pw";
+  fullRender();
+}
+window.openAdminPw = openAdminPw;
+
+function closeModal() {
+  modalMode = null;
+  editDraft = null;
+  stateDraft = null;
+  fullRender();
+}
+window.closeModal = closeModal;
 
 async function submitPw() {
-  const email = window.ADMIN_EMAIL || "wendy@truecaremarketing.com";
+  const email = window.ADMIN_EMAIL || "PASTE_YOUR_ADMIN_EMAIL";
   const password = document.getElementById("pwf").value;
   try {
     await window.firebaseFns.signInWithEmailAndPassword(window.firebaseAuth, email, password);
     modalMode = null;
+    fullRender();
   } catch (err) {
     document.getElementById("pwerr").textContent = "Incorrect password or Firebase login not configured.";
   }
 }
 window.submitPw = submitPw;
 
-function lockAdmin() { window.firebaseFns.signOut(window.firebaseAuth); }
+function lockAdmin() {
+  window.firebaseFns.signOut(window.firebaseAuth);
+}
 window.lockAdmin = lockAdmin;
 
-function openEditFirm(sk,id){editDraft=Object.assign({_sk:sk},JSON.parse(JSON.stringify(appData[sk].firms.find(f=>f.id===id))));modalMode="firm";fullRender();}
-function saveFirmEdit(){const sk=editDraft._sk,firms=appData[sk].firms,idx=firms.findIndex(f=>f.id===editDraft.id);const u={id:editDraft.id,name:document.getElementById("ef_name").value,pronunciation:document.getElementById("ef_pronunciation").value,accepting:document.getElementById("ef_a").value==="true",priority:document.getElementById("ef_p").value,minors:document.getElementById("ef_m").value,marketing:document.getElementById("ef_marketing").value,minPD:document.getElementById("ef_minPD").value,trtNoTrt:document.getElementById("ef_trtNoTrt").value,trtWithTrt:document.getElementById("ef_trtWithTrt").value,geographic:document.getElementById("ef_geographic").value,requirements:document.getElementById("ef_requirements").value,exclusions:document.getElementById("ef_exclusions").value,contact:document.getElementById("ef_contact").value,notes:document.getElementById("ef_notes").value,faultType:document.getElementById("ef_faultType").value,keyThreshold:document.getElementById("ef_keyThreshold").value,signWhen:document.getElementById("ef_signWhen").value,doNotSign:document.getElementById("ef_doNotSign").value,disqualifiers:document.getElementById("ef_disqualifiers").value,lastUpdated:document.getElementById("ef_lastUpdated").value};if(idx>-1)firms[idx]=u;else firms.push(u);saveData();closeModal();}
-function deleteFirm(sk,id){if(!confirm("Remove this firm?"))return;appData[sk].firms=appData[sk].firms.filter(f=>f.id!==id);saveData();fullRender();}
-let _speakTimer=null;
-function speakFirm(id,text){window.speechSynthesis.cancel();const btn=document.querySelector('.speak-btn[data-id="'+id+'"]');if(btn){btn.classList.add("speaking");clearTimeout(_speakTimer);_speakTimer=setTimeout(()=>btn.classList.remove("speaking"),4000);}const u=new SpeechSynthesisUtterance(text);u.rate=0.85;u.pitch=1;u.onend=()=>{if(btn)btn.classList.remove("speaking");};window.speechSynthesis.speak(u);}
-function openEditState(key){stateDraft={key,abbr:appData[key].abbr,stateFaultType:appData[key].stateFaultType||"",stateKeyThreshold:appData[key].stateKeyThreshold||"",stateSignWhen:appData[key].stateSignWhen||"",stateDoNotSign:appData[key].stateDoNotSign||"",stateDisqualifiers:appData[key].stateDisqualifiers||""};modalMode="state";fullRender();}
-function saveStateEdit(oldKey){const nk=(document.getElementById("es_n").value||oldKey).trim();if(nk!==oldKey){appData[nk]=appData[oldKey];delete appData[oldKey];}appData[nk].abbr=document.getElementById("es_a").value;appData[nk].stateFaultType=document.getElementById("es_sft").value;appData[nk].stateKeyThreshold=document.getElementById("es_skt").value;appData[nk].stateSignWhen=document.getElementById("es_ssw").value;appData[nk].stateDoNotSign=document.getElementById("es_sdns").value;appData[nk].stateDisqualifiers=document.getElementById("es_sdq").value;if(curState===oldKey)curState=nk;saveData();closeModal();}
-function deleteState(key){if(!confirm("Delete "+key+"?"))return;delete appData[key];curState=null;saveData();closeModal();}
-function openAddState(){modalMode="addstate";fullRender();}
-function addState(){const k=(document.getElementById("as_n").value||"").trim();if(!k)return;appData[k]={abbr:document.getElementById("as_a").value||"",notes:"",stateFaultType:document.getElementById("as_sft").value||"",stateKeyThreshold:document.getElementById("as_skt").value||"",stateSignWhen:document.getElementById("as_ssw").value||"",stateDoNotSign:document.getElementById("as_sdns").value||"",stateDisqualifiers:document.getElementById("as_sdq").value||"",firms:[]};curState=k;saveData();closeModal();}
-function saveInlineField(key,field,elId){const el=document.getElementById(elId);if(el){appData[key][field]=el.value;saveData();fullRender();}}
-function openAddFirm(sk){editDraft={id:uid(),_sk:sk,_new:true,name:"",pronunciation:"",accepting:true,priority:"High",minors:"16 Years Old",marketing:"Belief Marketing",minPD:"",trtNoTrt:TRT.noTrt,trtWithTrt:TRT.withTrt,geographic:"",requirements:"",exclusions:"",contact:"",notes:"",faultType:"",keyThreshold:"",signWhen:"",doNotSign:"",disqualifiers:"",lastUpdated:""};modalMode="firm";fullRender();}
+function openEditFirm(sk, id) {
+  const found = (appData[sk]?.firms || []).find(f => makeSafeFirm(f).id === id);
+  editDraft = Object.assign({ _sk: sk }, JSON.parse(JSON.stringify(makeSafeFirm(found || {}))));
+  modalMode = "firm";
+  fullRender();
+}
+window.openEditFirm = openEditFirm;
 
-window.openAdminPw=openAdminPw;window.closeModal=closeModal;window.setSearchMode=setSearchMode;window.handleSearch=handleSearch;window.viewState=viewState;window.openEditFirm=openEditFirm;window.saveFirmEdit=saveFirmEdit;window.deleteFirm=deleteFirm;window.speakFirm=speakFirm;window.openEditState=openEditState;window.saveStateEdit=saveStateEdit;window.deleteState=deleteState;window.openAddState=openAddState;window.addState=addState;window.saveInlineField=saveInlineField;window.openAddFirm=openAddFirm;
+function saveFirmEdit() {
+  const sk = editDraft._sk;
+  const firms = appData[sk].firms || [];
+  const idx = firms.findIndex(f => makeSafeFirm(f).id === editDraft.id);
 
-(function(){
-  const resizer=document.getElementById("resizer");
-  const left=document.getElementById("panelLeft");
-  let dragging=false,startX=0,startW=0;
-  resizer.addEventListener("mousedown",e=>{
-    dragging=true;startX=e.clientX;startW=left.offsetWidth;
+  const u = {
+    id: editDraft.id,
+    name: document.getElementById("ef_name").value,
+    pronunciation: document.getElementById("ef_pronunciation").value,
+    accepting: document.getElementById("ef_a").value === "true",
+    priority: document.getElementById("ef_p").value,
+    minors: "16 Years Old",
+    marketing: document.getElementById("ef_marketing").value,
+    minPD: document.getElementById("ef_minPD").value,
+    trtNoTrt: document.getElementById("ef_trtNoTrt").value,
+    trtWithTrt: document.getElementById("ef_trtWithTrt").value,
+    geographic: document.getElementById("ef_geographic").value,
+    requirements: cleanMinorText(document.getElementById("ef_requirements").value),
+    exclusions: cleanMinorText(document.getElementById("ef_exclusions").value),
+    contact: document.getElementById("ef_contact").value,
+    notes: cleanMinorText(document.getElementById("ef_notes").value),
+    faultType: document.getElementById("ef_faultType").value,
+    keyThreshold: document.getElementById("ef_keyThreshold").value,
+    signWhen: document.getElementById("ef_signWhen").value,
+    doNotSign: document.getElementById("ef_doNotSign").value,
+    disqualifiers: document.getElementById("ef_disqualifiers").value,
+    lastUpdated: document.getElementById("ef_lastUpdated").value
+  };
+
+  if (idx > -1) firms[idx] = u;
+  else firms.push(u);
+
+  appData[sk].firms = firms;
+  saveData();
+  closeModal();
+}
+window.saveFirmEdit = saveFirmEdit;
+
+function deleteFirm(sk, id) {
+  if (!confirm("Remove this firm?")) return;
+  appData[sk].firms = (appData[sk].firms || []).filter(f => makeSafeFirm(f).id !== id);
+  saveData();
+  fullRender();
+}
+window.deleteFirm = deleteFirm;
+
+let _speakTimer = null;
+function speakFirm(id, text) {
+  window.speechSynthesis.cancel();
+  const btn = document.querySelector('.speak-btn[data-id="' + id + '"]');
+  if (btn) {
+    btn.classList.add("speaking");
+    clearTimeout(_speakTimer);
+    _speakTimer = setTimeout(() => btn.classList.remove("speaking"), 4000);
+  }
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 0.85;
+  u.pitch = 1;
+  u.onend = () => { if (btn) btn.classList.remove("speaking"); };
+  window.speechSynthesis.speak(u);
+}
+window.speakFirm = speakFirm;
+
+function openEditState(key) {
+  stateDraft = {
+    key,
+    abbr: appData[key].abbr,
+    stateFaultType: appData[key].stateFaultType || "",
+    stateKeyThreshold: appData[key].stateKeyThreshold || "",
+    stateSignWhen: appData[key].stateSignWhen || "",
+    stateDoNotSign: appData[key].stateDoNotSign || "",
+    stateDisqualifiers: appData[key].stateDisqualifiers || ""
+  };
+  modalMode = "state";
+  fullRender();
+}
+window.openEditState = openEditState;
+
+function saveStateEdit(oldKey) {
+  const nk = (document.getElementById("es_n").value || oldKey).trim();
+  if (nk !== oldKey) {
+    appData[nk] = appData[oldKey];
+    delete appData[oldKey];
+  }
+  appData[nk].abbr = document.getElementById("es_a").value;
+  appData[nk].stateFaultType = document.getElementById("es_sft").value;
+  appData[nk].stateKeyThreshold = document.getElementById("es_skt").value;
+  appData[nk].stateSignWhen = document.getElementById("es_ssw").value;
+  appData[nk].stateDoNotSign = document.getElementById("es_sdns").value;
+  appData[nk].stateDisqualifiers = document.getElementById("es_sdq").value;
+  if (curState === oldKey) curState = nk;
+  saveData();
+  closeModal();
+}
+window.saveStateEdit = saveStateEdit;
+
+function deleteState(key) {
+  if (!confirm("Delete " + key + "?")) return;
+  delete appData[key];
+  curState = Object.keys(appData)[0] || null;
+  saveData();
+  closeModal();
+}
+window.deleteState = deleteState;
+
+function openAddState() {
+  modalMode = "addstate";
+  fullRender();
+}
+window.openAddState = openAddState;
+
+function addState() {
+  const k = (document.getElementById("as_n").value || "").trim();
+  if (!k) return;
+  appData[k] = {
+    abbr: document.getElementById("as_a").value || "",
+    notes: "",
+    stateFaultType: document.getElementById("as_sft").value || "",
+    stateKeyThreshold: document.getElementById("as_skt").value || "",
+    stateSignWhen: document.getElementById("as_ssw").value || "",
+    stateDoNotSign: document.getElementById("as_sdns").value || "",
+    stateDisqualifiers: document.getElementById("as_sdq").value || "",
+    firms: []
+  };
+  curState = k;
+  saveData();
+  closeModal();
+}
+window.addState = addState;
+
+function saveInlineField(key, field, elId) {
+  const el = document.getElementById(elId);
+  if (el) {
+    appData[key][field] = el.value;
+    saveData();
+    fullRender();
+  }
+}
+window.saveInlineField = saveInlineField;
+
+function openAddFirm(sk) {
+  editDraft = {
+    id: uid(),
+    _sk: sk,
+    _new: true,
+    name: "",
+    pronunciation: "",
+    accepting: true,
+    priority: "High",
+    minors: "16 Years Old",
+    marketing: "Belief Marketing",
+    minPD: "",
+    trtNoTrt: "",
+    trtWithTrt: "",
+    geographic: "",
+    requirements: "",
+    exclusions: "",
+    contact: "",
+    notes: "",
+    faultType: "",
+    keyThreshold: "",
+    signWhen: "",
+    doNotSign: "",
+    disqualifiers: "",
+    lastUpdated: ""
+  };
+  modalMode = "firm";
+  fullRender();
+}
+window.openAddFirm = openAddFirm;
+
+(function () {
+  const resizer = document.getElementById("resizer");
+  const left = document.getElementById("panelLeft");
+  if (!resizer || !left) return;
+
+  let dragging = false, startX = 0, startW = 0;
+  resizer.addEventListener("mousedown", e => {
+    dragging = true;
+    startX = e.clientX;
+    startW = left.offsetWidth;
     resizer.classList.add("dragging");
-    document.body.style.cursor="col-resize";
-    document.body.style.userSelect="none";
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
   });
-  document.addEventListener("mousemove",e=>{
-    if(!dragging)return;
-    const w=Math.min(Math.max(startW+(e.clientX-startX),180),520);
-    left.style.width=w+"px";
+
+  document.addEventListener("mousemove", e => {
+    if (!dragging) return;
+    const w = Math.min(Math.max(startW + (e.clientX - startX), 180), 520);
+    left.style.width = w + "px";
   });
-  document.addEventListener("mouseup",()=>{
-    if(!dragging)return;
-    dragging=false;resizer.classList.remove("dragging");
-    document.body.style.cursor="";document.body.style.userSelect="";
+
+  document.addEventListener("mouseup", () => {
+    if (!dragging) return;
+    dragging = false;
+    resizer.classList.remove("dragging");
+    document.body.style.cursor = "";
+    document.body.style.userSelect = "";
   });
 })();
 
 let lastAdminState = null;
-function applyAuthUI(user){
+function applyAuthUI(user) {
   const nextAdminState = !!user;
-  if (nextAdminState === lastAdminState) return;
+  if (lastAdminState === nextAdminState) return;
   lastAdminState = nextAdminState;
   adminUnlocked = nextAdminState;
+
   const adminBar = document.getElementById("adminBar");
   const adminLabel = document.getElementById("adminLabel");
   const adminBtns = document.getElementById("adminBtns");
+
   if (adminBar && adminLabel && adminBtns) {
     if (nextAdminState) {
       adminBar.className = "abar unlocked";
@@ -550,29 +746,28 @@ function applyAuthUI(user){
       adminBtns.innerHTML = `<button class="btn btn-sm" onclick="openAdminPw()">Admin login</button>`;
     }
   }
+
   fullRender();
 }
 
 window.addEventListener("firebase-ready", () => {
   window.firebaseFns.onAuthStateChanged(window.firebaseAuth, applyAuthUI);
-  loadDataFromCloud();
-});
 
-document.addEventListener("click", (event) => {
-  const stateRow = event.target.closest(".state-row[data-state]");
-  if (stateRow) {
-    const stateName = stateRow.getAttribute("data-state");
-    if (stateName) viewState(stateName);
-    return;
-  }
-  const openStateEl = event.target.closest("[data-open-state]");
-  if (openStateEl) {
-    const stateName = openStateEl.getAttribute("data-open-state");
-    if (stateName) openFirmState(stateName);
-  }
+  window.firebaseFns.onValue(window.firebaseFns.ref(window.firebaseDb, "portalData"), (snapshot) => {
+    if (suppressRealtime) return;
+
+    if (snapshot.exists() && isValidPortalData(snapshot.val())) {
+      const incoming = normalizeAppData(snapshot.val());
+      appData = incoming;
+      if (!curState || !appData[curState]) {
+        curState = Object.keys(appData)[0] || null;
+      }
+      fullRender();
+    }
+  });
+
+  loadDataFromCloud();
 });
 
 fullRender();
 </script>
-</body>
-</html>

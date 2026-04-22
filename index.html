@@ -364,8 +364,8 @@ function renderFirmList(){
     firms.map(({name,states})=>{
       const stateCount=states.length;
       const preferred = (states.find(s=>s.accepting) || states[0] || {}).stateName || "";
-      const tooltipRows=states.map(s=>`<div class="tt-state clickable" onclick="event.stopPropagation();openFirmState('${String(s.stateName).replace(/'/g, "\'")}')"><span class="tt-abbr">${s.abbr}</span><span class="tt-sname">${s.stateName}</span><span class="tt-badges"><span class="tt-badge ${s.accepting?"open":"closed"}">${s.accepting?"Open":"Closed"}</span></span></div>`).join("");
-      return`<div class="firm-name-row" onclick="openFirmState('${String(preferred).replace(/'/g, "\'")}')"><span class="fnr-name">${name}</span><span class="fnr-count">${stateCount} state${stateCount!==1?"s":""}</span><div class="fnr-tooltip"><div class="tt-title">States covered</div>${tooltipRows}</div></div>`;
+      const tooltipRows=states.map(s=>`<div class="tt-state clickable" data-open-state="${String(s.stateName).replace(/"/g, "&quot;")}"><span class="tt-abbr">${s.abbr}</span><span class="tt-sname">${s.stateName}</span><span class="tt-badges"><span class="tt-badge ${s.accepting?"open":"closed"}">${s.accepting?"Open":"Closed"}</span></span></div>`).join("");
+      return`<div class="firm-name-row" data-open-state="${String(preferred).replace(/"/g, "&quot;")}"><span class="fnr-name">${name}</span><span class="fnr-count">${stateCount} state${stateCount!==1?"s":""}</span><div class="fnr-tooltip"><div class="tt-title">States covered</div>${tooltipRows}</div></div>`;
     }).join("");
 }
 
@@ -373,11 +373,11 @@ function renderList(){
   if(searchMode==="firm")return renderFirmList();
   const sorted=Object.keys(appData).sort();
   const q=search.toLowerCase();
-  const filtered=q?sorted.filter(s=>s.toLowerCase().includes(q)||appData[s].abbr.toLowerCase()===q):sorted;
+  const filtered=q?sorted.filter(s=>s.toLowerCase().includes(q)||((appData[s]||{}).abbr||"").toLowerCase()===q):sorted;
   if(!filtered.length)return`<div class="no-result">No states match</div>`;
   const rows=filtered.map(s=>{
     const activeClass=curState===s?" active-state":"";
-    return`<div class="state-row${activeClass}" onclick="viewState('${s}')"><div class="sr-left"><span class="sr-abbr">${appData[s].abbr}</span><span class="sr-name">${s}</span></div><div class="sr-right"><span class="sr-arrow">›</span></div></div>`;
+    return`<div class="state-row${activeClass}" data-state="${String(s).replace(/"/g, "&quot;")}"><div class="sr-left"><span class="sr-abbr">${(appData[s]||{}).abbr||""}</span><span class="sr-name">${s}</span></div><div class="sr-right"><span class="sr-arrow">›</span></div></div>`;
   }).join("");
   const addBtn=adminUnlocked?`<div style="margin-top:10px;"><button class="btn btn-blue btn-sm" onclick="openAddState()">+ Add state</button></div>`:"";
   return`<p class="hint">${filtered.length} states</p>${rows}${addBtn}`;
@@ -446,40 +446,35 @@ function setSearchMode(mode){
 }
 function handleSearch(v){search=v;fullRender();}
 function openFirmState(stateName){
-  if(!stateName) return;
-  search="";
+  if(!stateName || !appData[stateName]) return;
+  search = "";
+  curState = stateName;
+  searchMode = "state";
   const inp=document.getElementById("searchInput");
-  if(inp) inp.value="";
-  viewState(stateName);
+  if(inp){
+    inp.value="";
+    inp.placeholder="Search states…";
+  }
+  fullRender();
+  const detail = document.getElementById("detailPanel");
+  if(detail) detail.scrollTop = 0;
 }
 window.openFirmState=openFirmState;
+
 function viewState(s){
   if(!s || !appData[s]) return;
   curState = s;
   searchMode = "state";
-  const inp = document.getElementById("searchInput");
+  const inp=document.getElementById("searchInput");
   if(inp){
-    inp.value = "";
-    inp.placeholder = "Search states…";
+    inp.value="";
+    inp.placeholder="Search states…";
   }
-  try{
-    const detail = document.getElementById("detailPanel");
-    const list = document.getElementById("stateList");
-    if(list) list.innerHTML = renderList();
-    if(detail) {
-      detail.innerHTML = renderDetail(curState);
-      detail.scrollTop = 0;
-    }
-    updateCounter();
-    const sb = document.getElementById("modeStateBtn"), fb = document.getElementById("modeFirmBtn");
-    if(sb) sb.className = "mode-btn active";
-    if(fb) fb.className = "mode-btn";
-  }catch(err){
-    console.error("State render failed:", err);
-    const detail = document.getElementById("detailPanel");
-    if(detail) detail.innerHTML = '<div class="no-result" style="margin-top:24px;">Could not load this state. Check console for details.</div>';
-  }
+  fullRender();
+  const detail = document.getElementById("detailPanel");
+  if(detail) detail.scrollTop = 0;
 }
+
 function openAdminPw(){modalMode="pw";fullRender();}
 function closeModal(){modalMode=null;editDraft=null;stateDraft=null;fullRender();}
 
@@ -489,7 +484,6 @@ async function submitPw() {
   try {
     await window.firebaseFns.signInWithEmailAndPassword(window.firebaseAuth, email, password);
     modalMode = null;
-    fullRender();
   } catch (err) {
     document.getElementById("pwerr").textContent = "Incorrect password or Firebase login not configured.";
   }
@@ -536,17 +530,25 @@ window.openAdminPw=openAdminPw;window.closeModal=closeModal;window.setSearchMode
   });
 })();
 
+let lastAdminState = null;
 function applyAuthUI(user){
-  if (user) {
-    adminUnlocked = true;
-    document.getElementById("adminBar").className = "abar unlocked";
-    document.getElementById("adminLabel").textContent = "Admin mode";
-    document.getElementById("adminBtns").innerHTML = `<button class="btn btn-sm btn-red" onclick="lockAdmin()">Lock</button>`;
-  } else {
-    adminUnlocked = false;
-    document.getElementById("adminBar").className = "abar locked";
-    document.getElementById("adminLabel").textContent = "Rep mode";
-    document.getElementById("adminBtns").innerHTML = `<button class="btn btn-sm" onclick="openAdminPw()">Admin login</button>`;
+  const nextAdminState = !!user;
+  if (nextAdminState === lastAdminState) return;
+  lastAdminState = nextAdminState;
+  adminUnlocked = nextAdminState;
+  const adminBar = document.getElementById("adminBar");
+  const adminLabel = document.getElementById("adminLabel");
+  const adminBtns = document.getElementById("adminBtns");
+  if (adminBar && adminLabel && adminBtns) {
+    if (nextAdminState) {
+      adminBar.className = "abar unlocked";
+      adminLabel.textContent = "Admin mode";
+      adminBtns.innerHTML = `<button class="btn btn-sm btn-red" onclick="lockAdmin()">Lock</button>`;
+    } else {
+      adminBar.className = "abar locked";
+      adminLabel.textContent = "Rep mode";
+      adminBtns.innerHTML = `<button class="btn btn-sm" onclick="openAdminPw()">Admin login</button>`;
+    }
   }
   fullRender();
 }
@@ -554,20 +556,20 @@ function applyAuthUI(user){
 window.addEventListener("firebase-ready", () => {
   window.firebaseFns.onAuthStateChanged(window.firebaseAuth, applyAuthUI);
   loadDataFromCloud();
-  window.firebaseFns.onValue(window.firebaseFns.ref(window.firebaseDb, "portalData"), async (snapshot) => {
-    if (snapshot.exists() && isValidPortalData(snapshot.val())) {
-      appData = normalizeAppData(snapshot.val());
-      fullRender();
-    } else if (!snapshot.exists() || !isValidPortalData(snapshot.val())) {
-      appData = defaultPortalData();
-      fullRender();
-      try {
-        await window.firebaseFns.set(window.firebaseFns.ref(window.firebaseDb, "portalData"), appData);
-      } catch (err) {
-        console.error("Repair save failed:", err);
-      }
-    }
-  });
+});
+
+document.addEventListener("click", (event) => {
+  const stateRow = event.target.closest(".state-row[data-state]");
+  if (stateRow) {
+    const stateName = stateRow.getAttribute("data-state");
+    if (stateName) viewState(stateName);
+    return;
+  }
+  const openStateEl = event.target.closest("[data-open-state]");
+  if (openStateEl) {
+    const stateName = openStateEl.getAttribute("data-open-state");
+    if (stateName) openFirmState(stateName);
+  }
 });
 
 fullRender();

@@ -256,23 +256,7 @@ async function loadDataFromCloud() {
   fullRender();
 }
 
-async function saveData() {
-  const { ref, set } = window.firebaseFns;
-  const db = window.firebaseDb;
-  try {
-    await set(ref(db, "portalData"), appData);
-    const btn = document.getElementById("exportBtn");
-    if (btn) {
-      const old = btn.textContent;
-      btn.textContent = "✓ Saved";
-      setTimeout(() => btn.textContent = old, 1500);
-    }
-  } catch (err) {
-    console.error("Save failed:", err);
-    alert("Could not save changes.");
-  }
-}
-window.saveData = saveData;
+// saveData defined below with isSaving guard
 
 function firmCard(f,sk){
   const adminBtns=adminUnlocked?`<div style="display:flex;gap:5px;margin-left:8px;" onclick="event.stopPropagation()"><button class="btn btn-sm btn-blue" onclick="openEditFirm('${sk}','${f.id}')">Edit</button><button class="btn btn-sm btn-red" onclick="deleteFirm('${sk}','${f.id}')">Remove</button></div>`:"";
@@ -465,17 +449,44 @@ window.openAdminPw=openAdminPw;window.closeModal=closeModal;window.setSearchMode
   });
 })();
 
+// Prevent real-time listener from overwriting data mid-save
+let isSaving = false;
+
+async function saveData() {
+  const { ref, set } = window.firebaseFns;
+  const db = window.firebaseDb;
+  try {
+    isSaving = true;
+    await set(ref(db, "portalData"), appData);
+    const btn = document.getElementById("exportBtn");
+    if (btn) {
+      const old = btn.textContent;
+      btn.textContent = "✓ Saved";
+      setTimeout(() => { btn.textContent = old; }, 1500);
+    }
+  } catch (err) {
+    console.error("Save failed:", err);
+    alert("Could not save changes.");
+  } finally {
+    setTimeout(() => { isSaving = false; }, 2000);
+  }
+}
+window.saveData = saveData;
+
 function applyAuthUI(user){
-  if (user) {
-    adminUnlocked = true;
-    document.getElementById("adminBar").className = "abar unlocked";
-    document.getElementById("adminLabel").textContent = "Admin mode";
-    document.getElementById("adminBtns").innerHTML = `<button class="btn btn-sm btn-red" onclick="lockAdmin()">Lock</button>`;
+  adminUnlocked = !!user;
+  const adminBar = document.getElementById("adminBar");
+  const adminLabel = document.getElementById("adminLabel");
+  const adminBtns = document.getElementById("adminBtns");
+  if(!adminBar) return;
+  if (adminUnlocked) {
+    adminBar.className = "abar unlocked";
+    adminLabel.textContent = "Admin mode";
+    adminBtns.innerHTML = `<button class="btn btn-sm btn-red" onclick="lockAdmin()">Lock</button>`;
   } else {
-    adminUnlocked = false;
-    document.getElementById("adminBar").className = "abar locked";
-    document.getElementById("adminLabel").textContent = "Rep mode";
-    document.getElementById("adminBtns").innerHTML = `<button class="btn btn-sm" onclick="openAdminPw()">Admin login</button>`;
+    adminBar.className = "abar locked";
+    adminLabel.textContent = "Rep mode";
+    adminBtns.innerHTML = `<button class="btn btn-sm" onclick="openAdminPw()">Admin login</button>`;
   }
   fullRender();
 }
@@ -483,9 +494,11 @@ function applyAuthUI(user){
 window.addEventListener("firebase-ready", () => {
   window.firebaseFns.onAuthStateChanged(window.firebaseAuth, applyAuthUI);
   loadDataFromCloud();
+  // Only sync from Firebase when not in the middle of saving
   window.firebaseFns.onValue(window.firebaseFns.ref(window.firebaseDb, "portalData"), (snapshot) => {
-    if (snapshot.exists()) {
-      appData = snapshot.val();
+    if (isSaving) return;
+    if (snapshot.exists() && isValidPortalData(snapshot.val())) {
+      appData = normalizeAppData(snapshot.val());
       fullRender();
     }
   });

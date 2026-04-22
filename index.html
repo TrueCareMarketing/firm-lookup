@@ -389,7 +389,7 @@ function openAdminPw(){modalMode="pw";fullRender();}
 function closeModal(){modalMode=null;editDraft=null;stateDraft=null;fullRender();}
 
 async function submitPw() {
-  const email = window.ADMIN_EMAIL || "PASTE_YOUR_ADMIN_EMAIL";
+  const email = window.ADMIN_EMAIL || "wendy@truecaremarketing.com";
   const password = document.getElementById("pwf").value;
   try {
     await window.firebaseFns.signInWithEmailAndPassword(window.firebaseAuth, email, password);
